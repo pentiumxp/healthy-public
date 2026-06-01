@@ -30,6 +30,10 @@ git diff --check
 | API routes | route contract tests, auth/context tests | HTTP API 入参、鉴权、响应结构变化 |
 | UI 投影 | projection/UI harness | 图表、空状态、pending/confirmed 展示变化 |
 | MCP/plugin contract | MCP contract tests, privacy-safe error tests | MCP tool 入参、出参、权限或错误语义变化 |
+| Hermes plugin manifest | manifest contract/privacy tests | `/api/v1/hermes/plugin/manifest` 字段、权限、embedding metadata |
+| Hermes plugin provisioning | provisioning workflow/API harness | workspace bind、key/config 状态、active/manual/failed 状态 |
+| Hermes plugin launch | launch contract/privacy tests | `/api/v1/hermes/plugin/launch`、短期 token、iframe entry |
+| Hermes plugin postMessage | postMessage/projection harness | back、navigation、refresh、theme/font sync |
 | 隐私扫描 | privacy scan | 上传、日志、fixture、报告、导出相关变化 |
 | 架构边界测试 | architecture boundary test | 新增入口、route、tool handler、service、repository |
 

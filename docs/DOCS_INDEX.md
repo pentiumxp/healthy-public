@@ -14,6 +14,11 @@
 - `docs/HARNESS.md` - 测试与架构约束总览。
 - `docs/TEST_MATRIX.md` - 按变更类型选择验证命令和 harness。
 - `docs/DELIVERY_CHECKLIST.md` - 每次交付前检查清单。
+- `docs/HERMES_PLUGIN_INTEGRATION.md` - Healthy 作为 Hermes Mobile 独立插件的总体边界。
+- `docs/HERMES_PLUGIN_MANIFEST.md` - manifest endpoint 和 bounded metadata 合同。
+- `docs/HERMES_PLUGIN_PROVISIONING.md` - workspace provisioning、状态和 key/config 边界。
+- `docs/HERMES_PLUGIN_MCP.md` - `health` MCP/toolset、workspace isolation 和 summary-first 输出。
+- `docs/HERMES_PLUGIN_HARNESS.md` - 插件接入 H1/H2 harness 矩阵。
 - `docs/MODULES/` - 模块级职责、接口、数据、约束。
 - `docs/IMPLEMENTATION_NOTES/` - 复杂流程、分阶段计划、harness 分类矩阵。
 - `docs/RUNBOOKS/` - 反复出现的问题、诊断路径、修复流程。
@@ -26,6 +31,7 @@
 - 结构化健康数据域: `docs/MODULES/data-domains.md`
 - 来源文件、图片/OCR/导入: `docs/MODULES/imports-and-source-files.md`
 - 统计展示界面: `docs/MODULES/statistics-ui.md`
+- Hermes Mobile 插件接入: `docs/HERMES_PLUGIN_INTEGRATION.md`
 
 ## 当前优先 Implementation Notes
 

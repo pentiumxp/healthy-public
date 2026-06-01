@@ -20,5 +20,10 @@ Main entry docs:
 - Harness: `docs/HARNESS_RULES.md` and `docs/HARNESS.md`
 - Testing: `docs/TEST_MATRIX.md`
 - Delivery: `docs/DELIVERY_CHECKLIST.md`
+- Hermes plugin integration: `docs/HERMES_PLUGIN_INTEGRATION.md`
+- Hermes plugin manifest: `docs/HERMES_PLUGIN_MANIFEST.md`
+- Hermes plugin provisioning: `docs/HERMES_PLUGIN_PROVISIONING.md`
+- Hermes plugin MCP/toolset: `docs/HERMES_PLUGIN_MCP.md`
+- Hermes plugin harness: `docs/HERMES_PLUGIN_HARNESS.md`
 
 Do not store raw health data, private reports, tokens, cookies, secrets, private attachments, full OCR output, or long logs in docs, handoff, tests, or Git.

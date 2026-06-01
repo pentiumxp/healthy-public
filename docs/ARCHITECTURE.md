@@ -199,3 +199,16 @@ MCP 工具不得在无法解析来源用户时静默落到默认用户。
 
 Healthy 可以做趋势、统计、异常提示和数据质量提示，但不应输出医学诊断。涉及药物、化验异常、慢病风险时，输出应保留数据依据和不确定性。
 
+## Hermes Mobile Plugin Boundary
+
+Healthy is an independent Hermes Mobile plugin. Hermes Mobile owns plugin host, manifest normalization, provisioning status, same-origin proxy, iframe lifecycle, launch-token exchange, workspace switching, appearance sync, and Gateway/Hermes Agent toolset routing.
+
+Healthy owns health business logic, database, migrations, import/archive behavior, plugin UI/API, MCP server/toolset, deployment scripts, harnesses, and privacy scan.
+
+Detailed contracts:
+
+- `docs/HERMES_PLUGIN_INTEGRATION.md`
+- `docs/HERMES_PLUGIN_MANIFEST.md`
+- `docs/HERMES_PLUGIN_PROVISIONING.md`
+- `docs/HERMES_PLUGIN_MCP.md`
+- `docs/HERMES_PLUGIN_HARNESS.md`

@@ -48,6 +48,7 @@ Update the smallest durable doc in the same change:
 - Architecture boundary -> `docs/ARCHITECTURE.md` or `docs/ARCHITECTURE_BOUNDARY.md`
 - Implementation phase -> `docs/IMPLEMENTATION_PLAN.md`
 - Test/harness rule -> `docs/TEST_MATRIX.md` or `docs/HARNESS_RULES.md`
+- Hermes plugin contract -> `docs/HERMES_PLUGIN_*.md`
 - Module behavior -> `docs/MODULES/<module>.md`
 - Current status -> `.agent-context/HANDOFF.md`
 
@@ -66,4 +67,3 @@ Before delivery, confirm no staged or logged content includes:
 ## GitHub
 
 Do not push unless the user explicitly asks. If pushing is requested, confirm the branch, remote, and staged scope first.
-
