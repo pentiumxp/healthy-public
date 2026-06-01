@@ -12,6 +12,27 @@
 - 数据库迁移检查命令。
 - `git diff --check`。
 
+当前初始化阶段通用命令：
+
+```powershell
+git status -sb --untracked-files=all
+codegraph status
+git diff --check
+```
+
+## Module Matrix
+
+| 模块 | 必跑测试 | 触发条件 |
+| --- | --- | --- |
+| 数据导入服务 | source-file/import workflow harness, repository tests | 图片/OCR/InBody-like 导入、候选确认、来源去重 |
+| 健康记录 repository | repository constraint tests, migration checks | schema、唯一约束、事务、删除/导出 |
+| 报告生成服务 | service harness, privacy scan | 生成、保存或导出健康报告 |
+| API routes | route contract tests, auth/context tests | HTTP API 入参、鉴权、响应结构变化 |
+| UI 投影 | projection/UI harness | 图表、空状态、pending/confirmed 展示变化 |
+| MCP/plugin contract | MCP contract tests, privacy-safe error tests | MCP tool 入参、出参、权限或错误语义变化 |
+| 隐私扫描 | privacy scan | 上传、日志、fixture、报告、导出相关变化 |
+| 架构边界测试 | architecture boundary test | 新增入口、route、tool handler、service、repository |
+
 在以下情况运行 full gates：
 
 - 数据库 schema 或迁移变化。
@@ -97,4 +118,3 @@
 - H1: 必须新增或更新 workflow/contract harness。
 - H2: 必须有边界、投影或 DOM/route contract 测试。
 - H3: focused 单元测试或语法检查即可。
-

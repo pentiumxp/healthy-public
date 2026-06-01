@@ -10,14 +10,26 @@ desktop.ini
 .env.*
 !.env.example
 
+# Local shared context and indexes
+.agent-context/
+.codegraph/
+
 # Dependency/build output
 node_modules/
 dist/
 build/
 coverage/
 
-# Logs and temporary files
+# Runtime data, uploads, databases, logs, and temporary files
 *.log
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+data/
+runtime/
+uploads/
+storage/
 tmp/
 temp/
-

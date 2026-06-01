@@ -6,10 +6,14 @@
 
 - `docs/ARCHITECTURE.md` - 系统架构、模块分层、MCP/HTTP/UI 调用路径。
 - `docs/ARCHITECTURE_BOUNDARY.md` - Service-first 架构边界、入口文件职责、单文件预算。
+- `docs/PROJECT_REQUIREMENTS.md` - 项目需求分析、角色、场景、非目标、数据和隐私边界。
 - `docs/PRODUCT_REQUIREMENTS.md` - 长期产品规则、首版范围、医学边界。
+- `docs/IMPLEMENTATION_PLAN.md` - 阶段划分、交付物、迁移、验证和回滚策略。
 - `docs/DATABASE.md` - 健康结构化数据模型、来源追踪、数据库约束。
+- `docs/HARNESS_RULES.md` - H1/H2/H3 harness 分级规则。
 - `docs/HARNESS.md` - 测试与架构约束总览。
 - `docs/TEST_MATRIX.md` - 按变更类型选择验证命令和 harness。
+- `docs/DELIVERY_CHECKLIST.md` - 每次交付前检查清单。
 - `docs/MODULES/` - 模块级职责、接口、数据、约束。
 - `docs/IMPLEMENTATION_NOTES/` - 复杂流程、分阶段计划、harness 分类矩阵。
 - `docs/RUNBOOKS/` - 反复出现的问题、诊断路径、修复流程。

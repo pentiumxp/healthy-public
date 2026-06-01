@@ -9,6 +9,7 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 相关文档：
 
 - `docs/ARCHITECTURE_BOUNDARY.md`: Service-first 边界和文件预算。
+- `docs/HARNESS_RULES.md`: H1/H2/H3 分级规则。
 - `docs/TEST_MATRIX.md`: 按变更类型选择验证范围。
 - `docs/IMPLEMENTATION_NOTES/harness-required-matrix.md`: H1/H2/H3 harness 分类。
 

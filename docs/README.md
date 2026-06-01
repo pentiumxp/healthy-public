@@ -1,13 +1,24 @@
 # Healthy Docs
 
-Healthy 的文档入口是 [DOCS_INDEX.md](DOCS_INDEX.md)。
+Healthy is a personal health data application for structured storage, statistics, and MCP-accessible analysis through Hermes Mobile.
 
-新线程或新任务的读取顺序：
+Current stage: initialization and architecture planning. Business code should not be written until the first implementation slice and harness scope are approved.
+
+Read order for new work:
 
 1. `.agent-context/PROJECT_CONTEXT.md`
 2. `.agent-context/HANDOFF.md`
 3. `docs/DOCS_INDEX.md`
-4. 按任务读取最小相关文档
+4. The smallest task-relevant docs
 
-不要把当前 rollout 状态写进长期设计文档。短期交接写入 `.agent-context/HANDOFF.md`，长期规则写入 `docs/`。
+Main entry docs:
 
+- Requirements: `docs/PROJECT_REQUIREMENTS.md` and `docs/PRODUCT_REQUIREMENTS.md`
+- Architecture: `docs/ARCHITECTURE.md` and `docs/ARCHITECTURE_BOUNDARY.md`
+- Implementation: `docs/IMPLEMENTATION_PLAN.md`
+- Database: `docs/DATABASE.md`
+- Harness: `docs/HARNESS_RULES.md` and `docs/HARNESS.md`
+- Testing: `docs/TEST_MATRIX.md`
+- Delivery: `docs/DELIVERY_CHECKLIST.md`
+
+Do not store raw health data, private reports, tokens, cookies, secrets, private attachments, full OCR output, or long logs in docs, handoff, tests, or Git.
