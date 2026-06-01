@@ -6,6 +6,12 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 
 本文档是架构契约。后续应把这些规则落实为自动化测试或 CI 检查。
 
+相关文档：
+
+- `docs/ARCHITECTURE_BOUNDARY.md`: Service-first 边界和文件预算。
+- `docs/TEST_MATRIX.md`: 按变更类型选择验证范围。
+- `docs/IMPLEMENTATION_NOTES/harness-required-matrix.md`: H1/H2/H3 harness 分类。
+
 ## Service-first 硬规则
 
 禁止把以下逻辑放在入口文件、路由文件、MCP tool handler 或 UI 组件中：
@@ -155,4 +161,3 @@ MCP 工具输出不应包含：
 - focused service tests。
 - 架构边界测试更新。
 - 文档更新。
-

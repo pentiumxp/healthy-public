@@ -12,6 +12,7 @@ Current state:
 - No app framework, package manager, or deployment target has been selected yet.
 - Initial product direction: structured health database plus statistics UI, with primary analysis exposed through MCP tools for Hermes Mobile.
 - Architecture documentation has been added under `docs/`.
+- Healthy docs now follow a Hermes Mobile-style layered structure: `DOCS_INDEX.md`, product requirements, architecture/boundary docs, module docs, implementation notes, runbooks, and test matrix.
 - Service-first is now a project constraint: business logic belongs in small services/providers, not large entrypoints, route files, MCP handlers, or UI components.
 
 Known issue:
@@ -36,4 +37,5 @@ Last completed setup:
 - Initialized Git, CodeGraph, and GitHub.
 - Prepared baseline `.gitignore`.
 - Added architecture, database, and Harness constraint docs.
+- Added doc index, module docs, product requirements, test matrix, harness-required matrix, and runbook entry.
 - Pending: create actual application scaffold after product/platform decisions.

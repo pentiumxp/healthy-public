@@ -15,10 +15,13 @@ Status:
 - No application source files were present at initialization time.
 
 Documentation entrypoint:
-- Read `docs/README.md` first after `.agent-context`.
+- Read `docs/DOCS_INDEX.md` first after `.agent-context`.
+- Use `docs/PRODUCT_REQUIREMENTS.md` for durable product rules and first-release scope.
 - Use `docs/ARCHITECTURE.md` for module/service boundaries.
+- Use `docs/ARCHITECTURE_BOUNDARY.md` for Service-first architecture contracts and file budgets.
 - Use `docs/DATABASE.md` for structured health data schema planning.
 - Use `docs/HARNESS.md` for Service-first constraints, file-size limits, and architecture test requirements.
+- Use `docs/TEST_MATRIX.md` and `docs/IMPLEMENTATION_NOTES/harness-required-matrix.md` to classify validation before implementation.
 
 Operating rules:
 - Prefer file-based shared context over thread-local assumptions.

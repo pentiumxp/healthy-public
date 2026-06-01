@@ -1,30 +1,13 @@
 # Healthy Docs
 
-本文档目录是健康应用的架构入口。新线程或新开发任务应先读本文件，再按任务读取最小相关文档。
+Healthy 的文档入口是 [DOCS_INDEX.md](DOCS_INDEX.md)。
 
-## 文档索引
+新线程或新任务的读取顺序：
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): 模块化架构、服务边界、MCP/HTTP/UI 分层。
-- [DATABASE.md](DATABASE.md): 首版数据库领域模型、表关系、约束、来源追踪。
-- [HARNESS.md](HARNESS.md): Service-first 约束、文件大小限制、测试与架构护栏。
+1. `.agent-context/PROJECT_CONTEXT.md`
+2. `.agent-context/HANDOFF.md`
+3. `docs/DOCS_INDEX.md`
+4. 按任务读取最小相关文档
 
-## 当前产品定位
-
-Healthy 是一个个人健康结构化数据仓库，配套提供统计展示界面，并通过 MCP 工具向 Hermes Mobile 暴露入库、查询和分析能力。
-
-首版重点数据域：
-
-- 用户 Profile 与当前用药。
-- 力量训练。
-- 有氧运动。
-- 身体数据与体成分。
-- 文件/图片来源追踪。
-- MCP 驱动的数据入库、趋势查询和分析摘要。
-
-## 设计原则
-
-- 数据库只保存可追溯、可重复测量、可跨时间比较的数据。
-- AI/OCR/图片分析结果必须保留来源、置信度和确认状态，不得直接覆盖用户确认事实。
-- 业务逻辑必须 Service-first，不放在入口文件、路由文件或 MCP handler 中。
-- 单文件保持小而单一职责；超过约束阈值时必须拆分。
+不要把当前 rollout 状态写进长期设计文档。短期交接写入 `.agent-context/HANDOFF.md`，长期规则写入 `docs/`。
 
