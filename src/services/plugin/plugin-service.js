@@ -25,13 +25,14 @@ function createPluginService({ userRepository, registrationKey, clock }) {
   function provision(input, bearer) {
     verifyRegistrationKey(bearer);
     try {
-      const workspaceRef = normalizeWorkspaceRef(input.workspace_id, input.hermes_workspace_id);
+      const hermesWorkspaceId = normalizeHermesWorkspaceId(input);
+      const workspaceRef = normalizeWorkspaceRef(input.workspace_id, hermesWorkspaceId);
       if (!input.access_key_hash) throw inputError("access_key_hash is required");
       const existing = userRepository.findByWorkspace(workspaceRef);
       const scopes = input.scopes || ["health:read", "health:write"];
       const user = userRepository.ensureUser({
         workspaceRef,
-        hermesUserRef: input.hermes_workspace_id,
+        hermesUserRef: hermesWorkspaceId,
         displayName: input.display_name,
         accessKeyHash: input.access_key_hash,
         scopes
@@ -52,7 +53,7 @@ function createPluginService({ userRepository, registrationKey, clock }) {
   }
 
   function launch(input, bearer) {
-    const workspaceRef = normalizeWorkspaceRef(input.workspace_id, input.hermes_workspace_id);
+    const workspaceRef = normalizeWorkspaceRef(input.workspace_id, normalizeHermesWorkspaceId(input));
     const user = verifyWorkspaceKey(workspaceRef, bearer);
     const token = randomUUID();
     const expiresAt = Date.now() + tokenTtlSeconds * 1000;
@@ -88,10 +89,38 @@ function createPluginService({ userRepository, registrationKey, clock }) {
     }
   }
 
+  function normalizeHermesWorkspaceId(input) {
+    const hermesWorkspaceId = cleanId(input.hermes_workspace_id);
+    const targetWorkspaceId = cleanId(input.target_workspace_id);
+    if (hermesWorkspaceId && targetWorkspaceId && hermesWorkspaceId !== targetWorkspaceId) {
+      throw inputError("workspace ids do not match", "invalid_workspace");
+    }
+    if (hermesWorkspaceId || targetWorkspaceId) return hermesWorkspaceId || targetWorkspaceId;
+    const workspaceId = cleanId(input.workspace_id);
+    if (workspaceId.startsWith("health:")) return workspaceId.slice("health:".length);
+    return workspaceId;
+  }
+
   function normalizeWorkspaceRef(workspaceId, hermesWorkspaceId) {
-    const value = workspaceId || (hermesWorkspaceId ? `health:${hermesWorkspaceId}` : "");
-    if (!value || !String(value).startsWith("health:")) throw inputError("workspace_id must use health:<workspaceId>", "invalid_workspace");
-    return String(value);
+    const explicitWorkspaceId = cleanId(workspaceId);
+    const normalizedHermesId = cleanId(hermesWorkspaceId);
+    if (explicitWorkspaceId.startsWith("health:")) {
+      const canonicalHermesId = explicitWorkspaceId.slice("health:".length);
+      if (!canonicalHermesId) throw inputError("workspace_id must include a workspace id", "invalid_workspace");
+      if (normalizedHermesId && normalizedHermesId !== canonicalHermesId) {
+        throw inputError("workspace ids do not match", "invalid_workspace");
+      }
+      return explicitWorkspaceId;
+    }
+    const bareWorkspaceId = explicitWorkspaceId || normalizedHermesId;
+    if (!bareWorkspaceId || bareWorkspaceId.includes(":")) {
+      throw inputError("workspace_id must use health:<workspaceId> or a bare Hermes workspace id", "invalid_workspace");
+    }
+    return `health:${bareWorkspaceId}`;
+  }
+
+  function cleanId(value) {
+    return value == null ? "" : String(value).trim();
   }
 
   return { launch, manifest, provision, resolveLaunchToken, verifyWorkspaceKey };

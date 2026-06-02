@@ -21,6 +21,7 @@ Must verify:
 - Hermes calls Healthy workspace registration.
 - Healthy creates or confirms workspace binding and empty data space.
 - Repeated registration for the same `hermes_workspace_id` is idempotent and does not duplicate the Healthy profile.
+- Owner self-provisioning with `owner` succeeds and stores canonical workspace id `health:owner`.
 - Healthy stores only workspace key hash or equivalent verifier, not the raw workspace key.
 - Manifest and launch smoke pass.
 - Status becomes `active`.

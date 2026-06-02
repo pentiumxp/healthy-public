@@ -30,11 +30,20 @@ Configuration:
   "owner": "hermes",
   "workspace_id": "health:<hermes_workspace_id>",
   "hermes_workspace_id": "<workspaceId>",
+  "target_workspace_id": "<workspaceId>",
   "display_name": "<workspace display name>",
   "access_key_hash": "<hash or one-time registration material>",
   "scopes": ["health:read", "health:write", "reports:read", "records:write"]
 }
 ```
+
+Workspace id compatibility:
+
+- Preferred canonical Health id: `workspace_id = "health:<hermes_workspace_id>"`.
+- Accepted host convenience form: `workspace_id = "<hermes_workspace_id>"`.
+- Accepted Hermes target alias: `target_workspace_id = "<hermes_workspace_id>"`.
+- Owner self-provisioning is accepted with `owner`, and Healthy stores it as `health:owner`.
+- If multiple workspace id fields are provided, they must refer to the same Hermes workspace.
 
 ## Healthy-Side Effects
 

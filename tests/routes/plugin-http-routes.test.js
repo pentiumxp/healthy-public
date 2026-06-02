@@ -77,6 +77,50 @@ test("registration is idempotent and stores one workspace-local profile", async 
   }
 });
 
+test("Owner workspace registration accepts bare Hermes workspace id and launches canonical Health workspace", async () => {
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const registration = await fetch(`${base}/api/v1/hermes/plugin/workspaces`, {
+      method: "POST",
+      headers: { Authorization: "Bearer registration-key", "content-type": "application/json" },
+      body: JSON.stringify({
+        owner: "hermes",
+        workspace_id: "owner",
+        target_workspace_id: "owner",
+        display_name: "Owner",
+        access_key_hash: sha256("key-owner"),
+        scopes: ["health:read", "health:write", "reports:read", "records:write"]
+      })
+    });
+    const registrationBody = await registration.json();
+    assert.equal(registration.status, 200);
+    assert.equal(registrationBody.workspace_id, "health:owner");
+    assert.equal(registrationBody.hermes_workspace_id, "owner");
+    assert.equal(registrationBody.status, "active");
+
+    const ownerUser = services.profileService.getUserByWorkspace("health:owner");
+    assert.equal(ownerUser.hermes_user_ref, "owner");
+    assert.equal(ownerUser.workspace_access_key_hash, sha256("key-owner"));
+
+    const launchResponse = await fetch(`${base}/api/v1/hermes/plugin/launch`, {
+      method: "POST",
+      headers: { Authorization: "Bearer key-owner", "content-type": "application/json" },
+      body: JSON.stringify({ workspace_id: "owner", target_workspace_id: "owner" })
+    });
+    const launchBody = await launchResponse.json();
+    assert.equal(launchResponse.status, 200);
+    assert.match(launchBody.entry_path, /launch=/);
+    assert.doesNotMatch(launchBody.entry_path, /workspace_id=/);
+    assert.equal(launchBody.expires_in, 300);
+    assert.equal(launchBody.expires_in_seconds, 300);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("launch fails closed for an unregistered workspace", async () => {
   const services = createTestServices();
   const server = createServer(services);
