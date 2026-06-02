@@ -19,6 +19,78 @@ test("manifest exposes unified Hermes plugin discovery fields", async () => {
     assert.deepEqual(manifest.toolsets, ["health"]);
     assert.equal(manifest.provisioning.endpoint, "/api/v1/hermes/plugin/workspaces");
     assert.equal(manifest.launch.endpoint, "/api/v1/hermes/plugin/launch");
+    assert.equal(manifest.workspace.required, true);
+    assert.equal(countRows(services.db, "users"), 0);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("registration requires configured service key and rejects wrong key with stable diagnostics", async () => {
+  const missingKeyServices = createTestServices({ registrationKey: "" });
+  const missingKeyServer = createServer(missingKeyServices);
+  await listen(missingKeyServer);
+  const missingKeyBase = `http://127.0.0.1:${missingKeyServer.address().port}`;
+  try {
+    const response = await registrationRequest(missingKeyBase, "weixin_test_1", "key-test", "registration-key");
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, "registration_key_required");
+    assert.equal(countRows(missingKeyServices.db, "users"), 0);
+  } finally {
+    await new Promise((resolve) => missingKeyServer.close(resolve));
+  }
+
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const response = await registrationRequest(base, "weixin_test_1", "key-test", "wrong-registration-key");
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, "registration_key_invalid");
+    assert.equal(countRows(services.db, "users"), 0);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("registration is idempotent and stores one workspace-local profile", async () => {
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const created = await provision(base, "weixin_test_1", "key-test");
+    const updated = await provision(base, "weixin_test_1", "key-test-rotated");
+
+    assert.equal(created.provisioning_result, "created");
+    assert.equal(updated.provisioning_result, "updated");
+    assert.equal(countRows(services.db, "users"), 1);
+    assert.equal(countRows(services.db, "user_profiles"), 1);
+    const targetUser = services.profileService.getUserByWorkspace("health:weixin_test_1");
+    assert.equal(targetUser.workspace_access_key_hash, sha256("key-test-rotated"));
+    assert.notEqual(targetUser.workspace_access_key_hash, "key-test-rotated");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("launch fails closed for an unregistered workspace", async () => {
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const response = await fetch(`${base}/api/v1/hermes/plugin/launch`, {
+      method: "POST",
+      headers: { Authorization: "Bearer key-test", "content-type": "application/json" },
+      body: JSON.stringify({ workspace_id: "health:weixin_test_1", hermes_workspace_id: "weixin_test_1" })
+    });
+    const body = await response.json();
+    assert.equal(response.status, 400);
+    assert.equal(body.error.code, "workspace_not_registered");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -88,9 +160,15 @@ test("provisioning stores only key hash and launch rejects Owner key for target 
 });
 
 async function provision(base, hermesWorkspaceId, rawKey) {
-  const response = await fetch(`${base}/api/v1/hermes/plugin/workspaces`, {
+  const response = await registrationRequest(base, hermesWorkspaceId, rawKey, "registration-key");
+  assert.equal(response.status, 200);
+  return response.json();
+}
+
+async function registrationRequest(base, hermesWorkspaceId, rawKey, registrationKey) {
+  return fetch(`${base}/api/v1/hermes/plugin/workspaces`, {
     method: "POST",
-    headers: { Authorization: "Bearer registration-key", "content-type": "application/json" },
+    headers: { Authorization: `Bearer ${registrationKey}`, "content-type": "application/json" },
     body: JSON.stringify({
       owner: "hermes",
       workspace_id: `health:${hermesWorkspaceId}`,
@@ -100,8 +178,6 @@ async function provision(base, hermesWorkspaceId, rawKey) {
       scopes: ["health:read", "health:write"]
     })
   });
-  assert.equal(response.status, 200);
-  return response.json();
 }
 
 async function launch(base, hermesWorkspaceId, rawKey) {
@@ -141,4 +217,8 @@ async function apiWithLaunchOnly(base, path, method, launch, body) {
 
 function listen(server) {
   return new Promise((resolve) => server.listen(0, resolve));
+}
+
+function countRows(db, table) {
+  return db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count;
 }

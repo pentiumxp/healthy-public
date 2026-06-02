@@ -4,13 +4,24 @@ Healthy plugin integration is H1/H2 mixed. Provisioning, launch, MCP, workspace 
 
 ## H1 Harness
 
+### Fresh Install Discovery
+
+Must verify:
+
+- `GET /api/v1/hermes/plugin/manifest` works before any workspace has been provisioned.
+- Manifest includes `mcp.toolset = health`, top-level `toolsets = ["health"]`, provisioning endpoint, launch endpoint, and `workspace.required = true`.
+- Fresh install manifest does not create a Healthy user/profile and does not imply workspace `active`.
+
 ### Provisioning Success
 
 Must verify:
 
+- `HEALTHY_REGISTRATION_KEY` is configured.
 - Hermes creates workspace-local key/config in the target workspace directory.
 - Hermes calls Healthy workspace registration.
 - Healthy creates or confirms workspace binding and empty data space.
+- Repeated registration for the same `hermes_workspace_id` is idempotent and does not duplicate the Healthy profile.
+- Healthy stores only workspace key hash or equivalent verifier, not the raw workspace key.
 - Manifest and launch smoke pass.
 - Status becomes `active`.
 
@@ -18,6 +29,8 @@ Must verify:
 
 Must verify:
 
+- Missing `HEALTHY_REGISTRATION_KEY` returns `registration_key_required`.
+- Wrong registration bearer returns `registration_key_invalid`.
 - Failed registration, missing key/config, or failed launch smoke does not display `active`.
 - UI exposes bounded diagnosis.
 - Errors do not expose raw keys, tokens, cookies, file paths, or long logs.
@@ -36,8 +49,11 @@ Must verify:
 
 - Launch endpoint returns short-lived entry path only.
 - Launch response exposes `expires_in = 300`.
+- Launch response may also expose `expires_in_seconds = 300`.
+- Unregistered workspaces fail with `workspace_not_registered`.
 - Long-lived workspace key is not returned.
 - Owner workspace key cannot launch a non-Owner workspace.
+- Launch entry path does not include raw key or `workspace_id`.
 - Launch token is not written to docs, logs, postMessage, screenshots, or MCP output.
 
 ### MCP Workspace Isolation
@@ -75,6 +91,7 @@ Must verify:
 
 | Area | Class | Required harness |
 | --- | --- | --- |
+| Fresh install manifest | H1 | manifest contract/no-active-workspace harness |
 | Provisioning success | H1 | workflow/API harness |
 | Provisioning failure | H1 | workflow/API harness |
 | Workspace switching isolation | H1 | host/proxy/session harness |

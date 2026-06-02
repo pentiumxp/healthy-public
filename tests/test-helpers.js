@@ -2,9 +2,9 @@ const { createServices } = require("../src/app/services");
 const { createMigratedDatabase } = require("../src/db/client");
 const { sha256 } = require("../src/utils/auth");
 
-function createTestServices() {
+function createTestServices(options = {}) {
   const db = createMigratedDatabase(":memory:");
-  return createServices({ db, registrationKey: "registration-key" });
+  return createServices({ db, registrationKey: options.registrationKey ?? "registration-key" });
 }
 
 function provisionWorkspace(services, hermesWorkspaceId, rawKey) {
@@ -22,4 +22,3 @@ function provisionWorkspace(services, hermesWorkspaceId, rawKey) {
 }
 
 module.exports = { createTestServices, provisionWorkspace };
-

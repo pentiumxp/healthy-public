@@ -8,6 +8,8 @@ GET /api/v1/hermes/plugin/manifest
 
 The manifest returns bounded non-secret metadata for Hermes Mobile registration and normalization. It must not include raw keys, bearer tokens, cookies, database paths, complete health data, report bodies, attachment content, or local private paths.
 
+The manifest is an install-discovery endpoint. It must remain readable after the plugin is installed even when no Hermes workspace has provisioned Healthy yet. Hermes Mobile may use this response to show "installed / available to enable", but must not treat the manifest alone as proof that a workspace is active.
+
 ## Response Shape
 
 ```json
@@ -61,6 +63,7 @@ The manifest returns bounded non-secret metadata for Hermes Mobile registration 
 - `mcp.toolset` is `health` and is intentionally duplicated with top-level `toolsets`.
 - `permissions` are declarative metadata, not proof of authorization.
 - `embedding.sameOriginProxy` signals that local/LAN HTTP upstreams are expected to be proxied by Hermes Mobile.
+- `workspace.required = true` means launch, MCP, records, and reports require a provisioned workspace binding.
 
 ## Forbidden Manifest Data
 

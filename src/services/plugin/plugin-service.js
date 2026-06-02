@@ -23,26 +23,32 @@ function createPluginService({ userRepository, registrationKey, clock }) {
   }
 
   function provision(input, bearer) {
-    if (registrationKey && !safeEqual(sha256(bearer), sha256(registrationKey))) {
-      throw inputError("invalid registration key", "invalid_registration_key");
+    verifyRegistrationKey(bearer);
+    try {
+      const workspaceRef = normalizeWorkspaceRef(input.workspace_id, input.hermes_workspace_id);
+      if (!input.access_key_hash) throw inputError("access_key_hash is required");
+      const existing = userRepository.findByWorkspace(workspaceRef);
+      const scopes = input.scopes || ["health:read", "health:write"];
+      const user = userRepository.ensureUser({
+        workspaceRef,
+        hermesUserRef: input.hermes_workspace_id,
+        displayName: input.display_name,
+        accessKeyHash: input.access_key_hash,
+        scopes
+      });
+      userRepository.upsertProfile(user.id, {});
+      return {
+        ok: true,
+        workspace_id: user.workspace_ref,
+        hermes_workspace_id: user.hermes_user_ref,
+        status: "active",
+        provisioning_result: existing ? "updated" : "created",
+        scopes
+      };
+    } catch (error) {
+      if (error.code) throw error;
+      throw inputError("workspace registration failed", "workspace_registration_failed");
     }
-    const workspaceRef = normalizeWorkspaceRef(input.workspace_id, input.hermes_workspace_id);
-    if (!input.access_key_hash) throw inputError("access_key_hash is required");
-    const scopes = input.scopes || ["health:read", "health:write"];
-    const user = userRepository.ensureUser({
-      workspaceRef,
-      hermesUserRef: input.hermes_workspace_id,
-      displayName: input.display_name,
-      accessKeyHash: input.access_key_hash,
-      scopes
-    });
-    return {
-      ok: true,
-      workspace_id: user.workspace_ref,
-      hermes_workspace_id: user.hermes_user_ref,
-      status: "active",
-      scopes
-    };
   }
 
   function launch(input, bearer) {
@@ -73,6 +79,13 @@ function createPluginService({ userRepository, registrationKey, clock }) {
       throw inputError("workspace key is invalid", "permission_denied");
     }
     return user;
+  }
+
+  function verifyRegistrationKey(bearer) {
+    if (!registrationKey) throw inputError("registration key is required", "registration_key_required");
+    if (!bearer || !safeEqual(sha256(bearer), sha256(registrationKey))) {
+      throw inputError("registration key is invalid", "registration_key_invalid");
+    }
   }
 
   function normalizeWorkspaceRef(workspaceId, hermesWorkspaceId) {

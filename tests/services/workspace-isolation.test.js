@@ -38,7 +38,6 @@ test("profile and body data do not cross workspace boundaries", () => {
 
   assert.equal(owner.profile.height_cm, 180);
   assert.equal(owner.body.latest.weight.value, 80);
-  assert.equal(testWorkspace.profile.height_cm, undefined);
+  assert.equal(testWorkspace.profile.height_cm, null);
   assert.equal(testWorkspace.body.latest.weight, undefined);
 });
-

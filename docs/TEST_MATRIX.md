@@ -40,8 +40,10 @@ npm run check
 | UI 投影 | projection/UI harness | 图表、空状态、pending/confirmed 展示变化 |
 | MCP/plugin contract | MCP contract tests, privacy-safe error tests | MCP tool 入参、出参、权限或错误语义变化 |
 | Hermes plugin manifest | manifest contract/privacy tests | `/api/v1/hermes/plugin/manifest` 字段、权限、embedding metadata |
-| Hermes plugin provisioning | provisioning workflow/API harness | workspace bind、key/config 状态、active/manual/failed 状态 |
-| Hermes plugin launch | launch contract/privacy tests | `/api/v1/hermes/plugin/launch`、短期 token、iframe entry |
+| Hermes plugin fresh install | manifest contract/no-active-workspace harness | 插件安装后但 workspace 尚未开通；manifest 可读但不创建 Healthy user/profile |
+| Hermes plugin provisioning | provisioning workflow/API harness | `HEALTHY_REGISTRATION_KEY`、workspace bind、key/config 状态、幂等注册、active/manual/failed 状态 |
+| Hermes plugin registration failure | provisioning workflow/API harness | 缺注册 key、错注册 key、错误码 `registration_key_required` / `registration_key_invalid` |
+| Hermes plugin launch | launch contract/privacy tests | 未注册 workspace fail closed、workspace-local key hash 校验、短期 token、iframe entry |
 | Health MCP wrapper | wrapper fail-closed and tools/list tests | `.hermes-health/config.json`、`access-key.txt`、`mcp_health_*` callable |
 | Hermes plugin postMessage | postMessage/projection harness | back、navigation、refresh、theme/font sync |
 | 隐私扫描 | privacy scan | 上传、日志、fixture、报告、导出相关变化 |

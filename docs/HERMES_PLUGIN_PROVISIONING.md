@@ -12,13 +12,14 @@ Content-Type: application/json
 Authorization: Bearer <health-owner-or-registration-key>
 ```
 
-The bearer value is a registration credential. It must not be stored in docs, logs, screenshots, frontend state, iframe URLs, or postMessage payloads.
+The bearer value is the Healthy service-side registration credential. It must not be stored in docs, logs, screenshots, frontend state, iframe URLs, or postMessage payloads.
 
 Configuration:
 
-- `HEALTHY_REGISTRATION_KEY` enables production registration-key enforcement.
-- If `HEALTHY_REGISTRATION_KEY` is empty, the local development server accepts provisioning requests without a registration bearer. This is development mode only.
-- Production deployments should set `HEALTHY_REGISTRATION_KEY` and keep the raw value outside Git, docs, logs, screenshots, frontend state, and model prompts.
+- `HEALTHY_REGISTRATION_KEY` is required for workspace registration.
+- If `HEALTHY_REGISTRATION_KEY` is empty, registration fails with `registration_key_required`.
+- If the bearer value does not match `HEALTHY_REGISTRATION_KEY`, registration fails with `registration_key_invalid`.
+- Deployments must keep the raw value outside Git, docs, logs, screenshots, frontend state, and model prompts.
 - Healthy never falls back to a Hermes Owner web key.
 - Healthy never accepts an Owner workspace key as a substitute for the target workspace key.
 
@@ -48,6 +49,8 @@ Healthy creates or confirms:
 
 Healthy must not store a raw Hermes workspace key unless a later explicit design permits it. If a key is accepted, store only a hash or equivalent verifier.
 
+Registration is idempotent. Re-registering the same `hermes_workspace_id` updates the existing Healthy user binding and profile instead of creating duplicates.
+
 ## Response
 
 ```json
@@ -56,17 +59,19 @@ Healthy must not store a raw Hermes workspace key unless a later explicit design
   "workspace_id": "health:<hermes_workspace_id>",
   "hermes_workspace_id": "<workspaceId>",
   "status": "active",
+  "provisioning_result": "created|updated",
   "scopes": ["health:read", "health:write", "reports:read", "records:write"]
 }
 ```
 
 Error responses should use stable codes:
 
-- `invalid_registration_key`
+- `registration_key_required`
+- `registration_key_invalid`
 - `invalid_workspace`
 - `scope_denied`
 - `workspace_conflict`
-- `provisioning_failed`
+- `workspace_registration_failed`
 
 Error bodies must not echo secrets or raw request credentials.
 
