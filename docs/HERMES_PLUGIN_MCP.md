@@ -12,6 +12,58 @@ The MCP runtime is owned by the Healthy project. Hermes Mobile exposes the `heal
 
 NAS deployments must register Healthy MCP with the NAS-local Hermes Agent/Gateway profile, not only a Windows development machine.
 
+## Wrapper
+
+Local wrapper path:
+
+```text
+C:\Users\xuxin\Documents\healthy\scripts\mcp-health-wrapper.js
+```
+
+Local startup example:
+
+```powershell
+node C:\Users\xuxin\Documents\healthy\scripts\mcp-health-wrapper.js --workspace <Hermes user root> --no-workspace-override
+```
+
+NAS startup example:
+
+```bash
+node /path/to/healthy/scripts/mcp-health-wrapper.js --workspace "$HERMES_USER_ROOT" --no-workspace-override
+```
+
+The wrapper reads:
+
+```text
+<Hermes user root>/.hermes-health/config.json
+<Hermes user root>/.hermes-health/access-key.txt
+```
+
+`config.json` must contain bounded non-secret fields such as:
+
+```json
+{
+  "base_url": "http://127.0.0.1:4877",
+  "workspace_id": "health:<hermes_workspace_id>"
+}
+```
+
+Rules:
+
+- Supports `--workspace <Hermes user root>`.
+- Supports `--no-workspace-override`.
+- Fails closed when `.hermes-health/config.json` or `access-key.txt` is missing.
+- Does not accept model-supplied workspace, key, token, or cookie overrides.
+- Does not fall back to Owner.
+- Reads raw workspace key only from the workspace-local file.
+- Does not print the raw key.
+
+`tools/list` currently exposes:
+
+```text
+mcp_health_records_get_summary
+```
+
 ## Workspace Binding
 
 Every MCP call must resolve the current Hermes workspace.
@@ -106,4 +158,3 @@ Suggested scopes:
 - `tasks:write`
 
 Destructive operations should require a later explicit scope design before implementation.
-

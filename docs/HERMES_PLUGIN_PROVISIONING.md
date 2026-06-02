@@ -14,6 +14,14 @@ Authorization: Bearer <health-owner-or-registration-key>
 
 The bearer value is a registration credential. It must not be stored in docs, logs, screenshots, frontend state, iframe URLs, or postMessage payloads.
 
+Configuration:
+
+- `HEALTHY_REGISTRATION_KEY` enables production registration-key enforcement.
+- If `HEALTHY_REGISTRATION_KEY` is empty, the local development server accepts provisioning requests without a registration bearer. This is development mode only.
+- Production deployments should set `HEALTHY_REGISTRATION_KEY` and keep the raw value outside Git, docs, logs, screenshots, frontend state, and model prompts.
+- Healthy never falls back to a Hermes Owner web key.
+- Healthy never accepts an Owner workspace key as a substitute for the target workspace key.
+
 ## Request
 
 ```json
@@ -80,6 +88,12 @@ Healthy must not require Hermes to place that raw key in:
 - Docs.
 - Logs.
 
+Implementation note:
+
+- The current Healthy service stores `workspace_access_key_hash`.
+- It does not store the raw workspace key.
+- Launch verifies `sha256(Bearer)` against the target workspace hash.
+
 ## Provisioning States
 
 - `pending`: provisioning is running; plugin must not be shown as usable.
@@ -98,4 +112,3 @@ Not allowed:
 - Missing Healthy binding.
 - Missing MCP/toolset registration when the manifest declares it required.
 - Owner session/key reused for non-Owner workspace.
-

@@ -9,12 +9,14 @@
 
   async function load() {
     document.getElementById("workspaceLabel").textContent = `工作区：${workspaceId || "未绑定"}`;
-    if (!workspaceId || !launch) {
-      renderEmpty("缺少工作区或 launch token");
+    if (!launch) {
+      renderEmpty("缺少 launch token");
       return;
     }
     try {
-      const response = await fetch(`/api/v1/dashboard?workspace_id=${encodeURIComponent(workspaceId)}&launch=${encodeURIComponent(launch)}`);
+      const query = new URLSearchParams({ launch });
+      if (workspaceId) query.set("workspace_id", workspaceId);
+      const response = await fetch(`/api/v1/dashboard?${query.toString()}`);
       const data = await response.json();
       if (!response.ok || data.ok === false) throw new Error(data.error?.message || "load failed");
       render(data);

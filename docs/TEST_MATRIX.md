@@ -42,6 +42,7 @@ npm run check
 | Hermes plugin manifest | manifest contract/privacy tests | `/api/v1/hermes/plugin/manifest` 字段、权限、embedding metadata |
 | Hermes plugin provisioning | provisioning workflow/API harness | workspace bind、key/config 状态、active/manual/failed 状态 |
 | Hermes plugin launch | launch contract/privacy tests | `/api/v1/hermes/plugin/launch`、短期 token、iframe entry |
+| Health MCP wrapper | wrapper fail-closed and tools/list tests | `.hermes-health/config.json`、`access-key.txt`、`mcp_health_*` callable |
 | Hermes plugin postMessage | postMessage/projection harness | back、navigation、refresh、theme/font sync |
 | 隐私扫描 | privacy scan | 上传、日志、fixture、报告、导出相关变化 |
 | 架构边界测试 | architecture boundary test | 新增入口、route、tool handler、service、repository |

@@ -14,6 +14,7 @@ function createPluginService({ userRepository, registrationKey, clock }) {
       entry: { url: "/health.html?embed=hermes", mode: "iframe" },
       launch: { supported: true, endpoint: "/api/v1/hermes/plugin/launch", method: "POST", token_ttl_seconds: tokenTtlSeconds },
       provisioning: { supported: true, mode: "workspace_binding", endpoint: "/api/v1/hermes/plugin/workspaces" },
+      mcp: { server: "health-mcp", toolset: "health" },
       toolsets: ["health"],
       permissions: ["health:read", "health:write", "health:report"],
       embedding: { frameAncestors: ["hermes-origin"], postMessage: true, themeSync: true, sameOriginProxy: true, uploadProxy: true },
@@ -51,7 +52,8 @@ function createPluginService({ userRepository, registrationKey, clock }) {
     const expiresAt = Date.now() + tokenTtlSeconds * 1000;
     launchTokens.set(token, { userId: user.id, workspaceRef, expiresAt });
     return {
-      entry_path: `/health.html?embed=hermes&workspace_id=${encodeURIComponent(workspaceRef)}&launch=${token}`,
+      entry_path: `/health.html?embed=hermes&launch=${token}`,
+      expires_in: tokenTtlSeconds,
       expires_in_seconds: tokenTtlSeconds
     };
   }
@@ -59,7 +61,7 @@ function createPluginService({ userRepository, registrationKey, clock }) {
   function resolveLaunchToken(token, workspaceRef) {
     const record = launchTokens.get(token);
     if (!record || record.expiresAt < Date.now()) throw inputError("launch token expired", "launch_token_expired");
-    if (record.workspaceRef !== workspaceRef) throw inputError("workspace mismatch", "permission_denied");
+    if (workspaceRef && record.workspaceRef !== workspaceRef) throw inputError("workspace mismatch", "permission_denied");
     return record;
   }
 
@@ -83,4 +85,3 @@ function createPluginService({ userRepository, registrationKey, clock }) {
 }
 
 module.exports = { createPluginService };
-

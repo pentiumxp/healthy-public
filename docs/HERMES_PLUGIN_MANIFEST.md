@@ -30,6 +30,10 @@ The manifest returns bounded non-secret metadata for Hermes Mobile registration 
     "mode": "workspace_binding",
     "endpoint": "/api/v1/hermes/plugin/workspaces"
   },
+  "mcp": {
+    "server": "health-mcp",
+    "toolset": "health"
+  },
   "toolsets": ["health"],
   "permissions": ["health:read", "health:write", "health:report"],
   "embedding": {
@@ -52,7 +56,9 @@ The manifest returns bounded non-secret metadata for Hermes Mobile registration 
 - `kind` must be `embedded_app`.
 - `entry.url` is browser-facing and must be safe for Hermes proxy rewriting.
 - `launch.endpoint` returns only short-lived entry paths.
+- Launch responses return `expires_in = 300`; `expires_in_seconds` may remain as a compatibility alias.
 - `provisioning.mode` is `workspace_binding`; a UI toggle alone is insufficient.
+- `mcp.toolset` is `health` and is intentionally duplicated with top-level `toolsets`.
 - `permissions` are declarative metadata, not proof of authorization.
 - `embedding.sameOriginProxy` signals that local/LAN HTTP upstreams are expected to be proxied by Hermes Mobile.
 
@@ -81,9 +87,10 @@ Hermes Mobile should read:
 - `launch.endpoint`
 - `provisioning.supported`
 - `provisioning.endpoint`
+- `mcp.server`
+- `mcp.toolset`
 - `toolsets`
 - `permissions`
 - `embedding.sameOriginProxy`
 - `embedding.postMessage`
 - `embedding.themeSync`
-

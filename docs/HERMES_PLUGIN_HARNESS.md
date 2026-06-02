@@ -35,13 +35,17 @@ Must verify:
 Must verify:
 
 - Launch endpoint returns short-lived entry path only.
+- Launch response exposes `expires_in = 300`.
 - Long-lived workspace key is not returned.
+- Owner workspace key cannot launch a non-Owner workspace.
 - Launch token is not written to docs, logs, postMessage, screenshots, or MCP output.
 
 ### MCP Workspace Isolation
 
 Must verify:
 
+- `tools/list` exposes at least one `mcp_health_*` callable.
+- MCP wrapper fails closed when `.hermes-health/config.json` or `access-key.txt` is missing.
 - `health` MCP calls bind to current Hermes workspace.
 - Missing workspace context fails closed.
 - Cross-workspace reads/writes are rejected.
@@ -75,7 +79,7 @@ Must verify:
 | Provisioning failure | H1 | workflow/API harness |
 | Workspace switching isolation | H1 | host/proxy/session harness |
 | Launch token | H1 | launch contract/privacy harness |
-| MCP workspace isolation | H1 | MCP contract harness |
+| MCP workspace isolation | H1 | MCP contract harness and wrapper fail-closed test |
 | Health import privacy | H1 | import/privacy harness |
 | Iframe navigation | H2 | postMessage/projection harness |
 | Theme/font sync | H2 | UI projection harness |
@@ -84,4 +88,3 @@ Must verify:
 ## Privacy Fixture Rule
 
 Fixtures must be synthetic. Do not use real reports, real images, full OCR output, raw tokens, cookies, launch tokens, database files, or private local paths.
-
