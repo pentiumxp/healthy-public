@@ -24,6 +24,7 @@ Current Phase 1 commands:
 
 ```powershell
 npm test
+npm run check:utf8
 npm run check:architecture
 npm run check
 ```

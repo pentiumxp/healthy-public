@@ -24,6 +24,7 @@ Run the focused checks for touched modules from `docs/TEST_MATRIX.md`.
 When stack-specific commands exist, also run:
 
 - Syntax checks.
+- UTF-8/mojibake guard: `npm run check:utf8`.
 - Focused service tests.
 - Repository tests.
 - MCP contract tests.
