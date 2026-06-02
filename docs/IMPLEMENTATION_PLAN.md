@@ -2,7 +2,7 @@
 
 ## Current Stage
 
-The project is in initialization and architecture planning. No application framework or runtime stack has been selected. Do not write business code until the first implementation slice is approved.
+The project has entered Phase 1 implementation. The first runnable slice uses Node.js, the built-in `node:sqlite` database, service/repository boundaries, HTTP plugin routes, and a mobile embedded UI.
 
 ## Phase 0: Project Groundwork
 
@@ -38,6 +38,18 @@ Recommended scope:
 - Body measurement/body composition service.
 - Database migrations for the above.
 - Architecture boundary test skeleton.
+
+Implemented first slice:
+
+- Hermes plugin manifest endpoint.
+- Workspace provisioning with `health:<hermes_workspace_id>` binding.
+- Short launch-token flow.
+- Workspace-isolated Profile service.
+- Workspace-isolated strength training service.
+- Workspace-isolated body measurement service.
+- Dashboard projection for the embedded UI.
+- Mobile iframe UI matching the approved mockup direction.
+- Service, route, and architecture harness tests.
 
 Module ownership:
 
@@ -110,9 +122,8 @@ Deferred until the core flow is stable:
 
 Do not implement:
 
-- UI before the service/repository contracts exist.
 - OCR/model extraction without source-file and confirmation services.
 - Medical diagnosis or medication recommendations.
 - Long-running sync jobs before harness and retry policy exist.
 - Real private health fixtures.
-
+- Destructive delete/export operations before explicit audit and harness design.

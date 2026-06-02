@@ -15,6 +15,14 @@
 - 来源文件和待确认候选。
 - 数据质量提示。
 
+Current first slice:
+
+- `public/health.html`
+- `public/health.css`
+- `public/health.js`
+
+The embedded UI reads `/api/v1/dashboard` through workspace-bound launch context and shows Profile, strength training, body metrics, and pending import candidate count. It does not read from the database directly and does not show a duplicate Hermes shell.
+
 ## UI Boundary
 
 UI 可以：
@@ -49,4 +57,3 @@ UI 不应：
 - pending 与 confirmed 的视觉区分。
 - 图表输入来自 API 返回。
 - 隐私字段不进入前端 payload。
-

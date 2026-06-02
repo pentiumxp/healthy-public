@@ -1,0 +1,17 @@
+{
+  "name": "healthy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/app/http-server.js",
+    "migrate": "node scripts/migrate.js",
+    "test": "node --test tests/**/*.test.js",
+    "check:architecture": "node tests/architecture/service-first-boundary.test.js",
+    "check": "npm run test && npm run check:architecture"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
+

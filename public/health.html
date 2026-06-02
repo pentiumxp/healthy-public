@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>健康</title>
+    <link rel="stylesheet" href="/health.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>健康</h1>
+          <p id="workspaceLabel">工作区：未绑定</p>
+        </div>
+        <span class="status">已隔离</span>
+      </header>
+
+      <section class="profile-grid" aria-label="Profile">
+        <div class="metric">
+          <span>身高</span>
+          <strong id="heightValue">--</strong>
+        </div>
+        <div class="metric">
+          <span>目标体重</span>
+          <strong id="targetWeightValue">--</strong>
+        </div>
+        <div class="metric">
+          <span>当前用药</span>
+          <strong id="medicationCount">0</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>力量训练</h2>
+            <p id="latestStrength">暂无训练记录</p>
+          </div>
+          <div class="counter">
+            <span>本周训练量</span>
+            <strong id="weeklyVolume">0 kg</strong>
+          </div>
+        </div>
+        <div class="bars" id="strengthChart" aria-label="Strength volume chart"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>身体指标</h2>
+            <p>最近确认数据</p>
+          </div>
+        </div>
+        <div class="body-grid">
+          <div class="body-item">
+            <span>体重</span>
+            <strong id="weightMetric">--</strong>
+            <i id="weightTrend"></i>
+          </div>
+          <div class="body-item">
+            <span>体脂率</span>
+            <strong id="fatMetric">--</strong>
+            <i id="fatTrend"></i>
+          </div>
+          <div class="body-item">
+            <span>骨骼肌量</span>
+            <strong id="muscleMetric">--</strong>
+            <i id="muscleTrend"></i>
+          </div>
+        </div>
+      </section>
+
+      <section class="review">
+        <div>
+          <h2>待确认数据</h2>
+          <p id="pendingText">没有待确认的导入候选</p>
+        </div>
+        <button type="button" id="refreshButton">刷新</button>
+      </section>
+    </main>
+    <script src="/health.js"></script>
+  </body>
+</html>
+

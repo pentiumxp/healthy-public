@@ -20,6 +20,14 @@ codegraph status
 git diff --check
 ```
 
+Current Phase 1 commands:
+
+```powershell
+npm test
+npm run check:architecture
+npm run check
+```
+
 ## Module Matrix
 
 | 模块 | 必跑测试 | 触发条件 |

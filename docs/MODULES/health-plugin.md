@@ -18,6 +18,13 @@
 - 不允许静默写入默认用户或 Owner 用户。
 - Profile 更新不得删除既有健康事实。
 
+Current first slice:
+
+- `POST /api/v1/hermes/plugin/workspaces` creates or reuses a workspace-bound Healthy user.
+- External workspace identity is `workspace_id = health:<hermes_workspace_id>`.
+- All Profile, strength, body, and dashboard API calls resolve the workspace through a workspace-local key or short launch token.
+- Missing workspace context fails closed.
+
 ## Profile Data
 
 首版 Profile 字段：
@@ -51,4 +58,3 @@
 - 缺少 Hermes 用户上下文时拒绝写入。
 - 同一 Hermes 用户不会创建多个 Healthy user。
 - 当前用药查询只返回 active 且未结束记录。
-
