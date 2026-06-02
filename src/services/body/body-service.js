@@ -63,8 +63,28 @@ function createBodyService({ profileService, bodyRepository }) {
     return bodyRepository.listMeasurements(user.id, input.metric);
   }
 
-  return { listMeasurements, recordMeasurement };
+  function updateMeasurement(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    if (!input.measurementId) throw inputError("measurementId is required");
+    const existing = bodyRepository.listMeasurements(user.id).find((item) => item.id === input.measurementId);
+    if (!existing) throw inputError("body measurement is not found", "record_not_found");
+    const normalized = normalizeMeasurement({
+      measuredAt: input.measuredAt ?? existing.measured_at,
+      metric: input.metric ?? existing.metric,
+      value: input.value ?? existing.value,
+      unit: input.unit ?? existing.unit,
+      bodyPart: Object.hasOwn(input, "bodyPart") ? input.bodyPart : existing.body_part,
+      sourceType: input.sourceType ?? existing.source_type,
+      confirmationStatus: input.confirmationStatus ?? existing.confirmation_status,
+      confidence: Object.hasOwn(input, "confidence") ? input.confidence : existing.confidence,
+      notes: Object.hasOwn(input, "notes") ? input.notes : existing.notes
+    });
+    const measurement = bodyRepository.updateMeasurement(user.id, input.measurementId, normalized);
+    if (!measurement) throw inputError("body measurement is not found", "record_not_found");
+    return measurement;
+  }
+
+  return { listMeasurements, recordMeasurement, updateMeasurement };
 }
 
 module.exports = { BODY_METRICS, createBodyService };
-

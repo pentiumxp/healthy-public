@@ -80,6 +80,31 @@ function createTrainingRepository(db, { clock } = {}) {
     ).all(userId);
   }
 
+  function updateSession(userId, sessionId, session) {
+    const existing = db.prepare(
+      "SELECT * FROM strength_sessions WHERE id = ? AND user_id = ?"
+    ).get(sessionId, userId);
+    if (!existing) return null;
+    const next = { ...existing, ...session };
+    db.prepare(
+      `UPDATE strength_sessions SET started_at = ?, ended_at = ?,
+       duration_minutes = ?, session_rpe = ?, location = ?, notes = ?,
+       source_type = ?, updated_at = ? WHERE id = ? AND user_id = ?`
+    ).run(
+      next.startedAt ?? next.started_at,
+      next.endedAt ?? next.ended_at,
+      next.durationMinutes ?? next.duration_minutes,
+      next.sessionRpe ?? next.session_rpe,
+      next.location,
+      next.notes,
+      next.sourceType ?? next.source_type,
+      nowIso(clock),
+      sessionId,
+      userId
+    );
+    return db.prepare("SELECT * FROM strength_sessions WHERE id = ?").get(sessionId);
+  }
+
   function listSetsForSession(sessionId) {
     return db.prepare(
       `SELECT ss.*, ec.name AS exercise_name
@@ -90,8 +115,7 @@ function createTrainingRepository(db, { clock } = {}) {
     ).all(sessionId);
   }
 
-  return { addSet, createSession, ensureExercise, listSessions, listSetsForSession };
+  return { addSet, createSession, ensureExercise, listSessions, listSetsForSession, updateSession };
 }
 
 module.exports = { createTrainingRepository };
-

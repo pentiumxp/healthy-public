@@ -58,11 +58,28 @@ Rules:
 - Reads raw workspace key only from the workspace-local file.
 - Does not print the raw key.
 
-`tools/list` currently exposes:
+`tools/list` exposes:
 
 ```text
 mcp_health_records_get_summary
+mcp_health_profile_get
+mcp_health_profile_update
+mcp_health_medications_list
+mcp_health_medication_add
+mcp_health_strength_sessions_list
+mcp_health_strength_session_record
+mcp_health_strength_session_update
+mcp_health_body_measurements_list
+mcp_health_body_measurement_record
+mcp_health_body_measurement_update
+mcp_health_metrics_trends
 ```
+
+The wrapper supports standard JSON-RPC MCP messages over stdio:
+
+- `initialize`
+- `tools/list`
+- `tools/call`
 
 ## Workspace Binding
 
@@ -73,26 +90,35 @@ Rules:
 - No default Owner workspace.
 - No cross-workspace reads or writes.
 - Missing workspace context fails closed.
+- Tool arguments must not include workspace, key, bearer, token, cookie, launch token, or credential override fields.
 - Write, delete, overwrite, import, and report-generation operations require audit metadata.
 
-## Suggested Tools
+## Implemented Tools
 
 Read and summary:
 
-- `health.records.list`
-- `health.records.get_summary`
-- `health.metrics.trends`
+- `mcp_health_records_get_summary`
+- `mcp_health_profile_get`
+- `mcp_health_medications_list`
+- `mcp_health_strength_sessions_list`
+- `mcp_health_body_measurements_list`
+- `mcp_health_metrics_trends`
 
-Import and write:
+Write and update:
 
-- `health.records.import`
-- `health.records.record_strength_session`
-- `health.records.record_body_measurement`
+- `mcp_health_profile_update`
+- `mcp_health_medication_add`
+- `mcp_health_strength_session_record`
+- `mcp_health_strength_session_update`
+- `mcp_health_body_measurement_record`
+- `mcp_health_body_measurement_update`
 
-Reports and tasks:
+Deferred tools:
 
-- `health.reports.generate_summary`
-- `health.tasks.create_followup`
+- Source-file import and OCR review tools.
+- Report generation tools.
+- Follow-up task creation tools.
+- Destructive delete tools.
 
 ## Output Contract
 
@@ -145,6 +171,8 @@ Write tools should record:
 - Timestamp.
 
 Do not log full private payloads.
+
+Current first-version write tools persist through the Health HTTP API with workspace-local key authorization. They do not accept model-supplied workspace or credential overrides. Structured write results may include canonical record ids and bounded fields, but not raw keys, launch tokens, cookies, database paths, full report content, or attachment payloads.
 
 ## Permissions
 

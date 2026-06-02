@@ -44,7 +44,7 @@ npm run check
 | Hermes plugin provisioning | provisioning workflow/API harness | `HEALTHY_REGISTRATION_KEY`、workspace bind、key/config 状态、幂等注册、active/manual/failed 状态 |
 | Hermes plugin registration failure | provisioning workflow/API harness | 缺注册 key、错注册 key、错误码 `registration_key_required` / `registration_key_invalid` |
 | Hermes plugin launch | launch contract/privacy tests | 未注册 workspace fail closed、workspace-local key hash 校验、短期 token、iframe entry |
-| Health MCP wrapper | wrapper fail-closed and tools/list tests | `.hermes-health/config.json`、`access-key.txt`、`mcp_health_*` callable |
+| Health MCP wrapper | wrapper fail-closed, tools/list, read/write tool tests | `.hermes-health/config.json`、`access-key.txt`、`mcp_health_*` callable、profile/strength/body 读写、禁止 workspace/key override |
 | Hermes plugin postMessage | postMessage/projection harness | back、navigation、refresh、theme/font sync |
 | 隐私扫描 | privacy scan | 上传、日志、fixture、报告、导出相关变化 |
 | 架构边界测试 | architecture boundary test | 新增入口、route、tool handler、service、repository |

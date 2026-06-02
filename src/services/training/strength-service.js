@@ -59,8 +59,23 @@ function createStrengthService({ profileService, trainingRepository, db }) {
     }));
   }
 
-  return { listSessions, recordSession };
+  function updateSession(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    if (!input.sessionId) throw inputError("sessionId is required");
+    const patch = {};
+    if (input.startedAt) patch.startedAt = requireIsoDateTime(input.startedAt, "startedAt");
+    if (Object.hasOwn(input, "endedAt")) {
+      patch.endedAt = input.endedAt ? requireIsoDateTime(input.endedAt, "endedAt") : null;
+    }
+    for (const key of ["durationMinutes", "sessionRpe", "location", "notes", "sourceType"]) {
+      if (Object.hasOwn(input, key)) patch[key] = input[key];
+    }
+    const session = trainingRepository.updateSession(user.id, input.sessionId, patch);
+    if (!session) throw inputError("strength session is not found", "record_not_found");
+    return { session, sets: trainingRepository.listSetsForSession(session.id) };
+  }
+
+  return { listSessions, recordSession, updateSession };
 }
 
 module.exports = { createStrengthService };
-

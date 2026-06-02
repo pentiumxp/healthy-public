@@ -35,8 +35,35 @@ function createBodyRepository(db, { clock } = {}) {
     return metric ? db.prepare(sql).all(userId, metric) : db.prepare(sql).all(userId);
   }
 
-  return { addMeasurement, listMeasurements };
+  function updateMeasurement(userId, measurementId, measurement) {
+    const existing = db.prepare(
+      "SELECT * FROM body_measurements WHERE id = ? AND user_id = ?"
+    ).get(measurementId, userId);
+    if (!existing) return null;
+    const next = { ...existing, ...measurement };
+    const now = nowIso(clock);
+    db.prepare(
+      `UPDATE body_measurements SET measured_at = ?, metric = ?, value = ?,
+       unit = ?, body_part = ?, source_type = ?, confirmation_status = ?,
+       confidence = ?, notes = ?, updated_at = ? WHERE id = ? AND user_id = ?`
+    ).run(
+      next.measuredAt ?? next.measured_at,
+      next.metric,
+      next.value,
+      next.unit,
+      next.bodyPart ?? next.body_part,
+      next.sourceType ?? next.source_type,
+      next.confirmationStatus ?? next.confirmation_status,
+      next.confidence,
+      next.notes,
+      now,
+      measurementId,
+      userId
+    );
+    return db.prepare("SELECT * FROM body_measurements WHERE id = ?").get(measurementId);
+  }
+
+  return { addMeasurement, listMeasurements, updateMeasurement };
 }
 
 module.exports = { createBodyRepository };
-
