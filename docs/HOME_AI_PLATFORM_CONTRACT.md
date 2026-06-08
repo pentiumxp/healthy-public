@@ -41,6 +41,7 @@ behavior, or cross-plugin reference behavior:
 | `credential_locations` | Local ignored runtime config only by reference. Do not record raw tokens, health data payloads, uploaded files, or private user data here. |
 | `reference_contract_status` | `planned`; Health should later expose Reference Contract methods for profile, medication, body, strength, cardio, lab, and medical-record objects. |
 | `mobile_visual_harness_status` | Local static/theme/service tests exist; Home AI Appium/iOS Simulator evidence is required for embedded mobile UI, safe-area, tab layout, or PWA differences. |
+| `ios_live_debug_available` | `yes`; use Home AI `npm run ios:pwa:debug` for interactive embedded iOS PWA reproduction, with one Simulator/live-debug-port/WDA-port/MJPEG-port lane per concurrent plugin debug session. |
 
 ## Required Local Validation
 
