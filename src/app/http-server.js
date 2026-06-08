@@ -3,6 +3,7 @@ const { readEnv } = require("../config/env");
 const { createServices } = require("./services");
 const { sendError, sendJson } = require("../routes/http-utils");
 const { handleHealthRoute } = require("../routes/health-routes");
+const { handleMedicalRoute } = require("../routes/medical-routes");
 const { handlePluginRoute } = require("../routes/plugin-routes");
 const { handleStaticRoute } = require("../routes/static-routes");
 
@@ -12,7 +13,8 @@ function createServer(services) {
     try {
       if (await handlePluginRoute(req, res, url, services)) return;
       if (await handleHealthRoute(req, res, url, services)) return;
-      if (handleStaticRoute(req, res, url)) return;
+      if (await handleMedicalRoute(req, res, url, services)) return;
+      if (handleStaticRoute(req, res, url, services)) return;
       sendJson(res, 404, { ok: false, error: { code: "not_found" } });
     } catch (error) {
       sendError(res, error);
@@ -29,4 +31,3 @@ if (require.main === module) {
 }
 
 module.exports = { createServer };
-

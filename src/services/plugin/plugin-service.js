@@ -57,7 +57,7 @@ function createPluginService({ userRepository, registrationKey, clock }) {
     const user = verifyWorkspaceKey(workspaceRef, bearer);
     const token = randomUUID();
     const expiresAt = Date.now() + tokenTtlSeconds * 1000;
-    launchTokens.set(token, { userId: user.id, workspaceRef, expiresAt });
+    launchTokens.set(token, { userId: user.id, workspaceRef, expiresAt, appearance: sanitizeAppearance(input) });
     return {
       entry_path: `/health.html?embed=hermes&launch=${token}`,
       expires_in: tokenTtlSeconds,
@@ -121,6 +121,21 @@ function createPluginService({ userRepository, registrationKey, clock }) {
 
   function cleanId(value) {
     return value == null ? "" : String(value).trim();
+  }
+
+  function sanitizeAppearance(input = {}) {
+    const source = input.appearance && typeof input.appearance === "object" ? input.appearance : input;
+    const theme = cleanId(source.theme || source.pluginTheme || source.plugin_theme);
+    const fontSize = cleanId(source.fontSize || source.pluginFontSize || source.plugin_font_size);
+    return {
+      ...(theme === "system" || theme === "light" || theme === "dark" ? { theme } : {}),
+      ...(normalizeFontSize(fontSize) ? { fontSize: normalizeFontSize(fontSize) } : {})
+    };
+  }
+
+  function normalizeFontSize(value) {
+    if (value === "default") return "normal";
+    return ["compact", "normal", "large", "xlarge"].includes(value) ? value : "";
   }
 
   return { launch, manifest, provision, resolveLaunchToken, verifyWorkspaceKey };

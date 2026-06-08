@@ -6,6 +6,10 @@ const TEXT_EXTENSIONS = new Set([".css", ".html", ".js", ".json", ".md", ".sql"]
 const SKIP_DIRS = new Set([".git", ".codegraph", "data", "node_modules", "storage", "tmp", "uploads"]);
 const MOJIBAKE_PATTERNS = [
   [0x934b],
+  [0x9359],
+  [0x93c4],
+  [0x9428],
+  [0x748b],
   [0x93c2],
   [0x7efe],
   [0x4e2e],

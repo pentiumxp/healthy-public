@@ -26,6 +26,21 @@ Local startup example:
 node C:\Users\xuxin\Documents\healthy\scripts\mcp-health-wrapper.js --workspace <Hermes user root> --no-workspace-override
 ```
 
+WSL-backed Gateway startup may override only the API base URL when the
+workspace config points at Windows loopback:
+
+```bash
+node /mnt/c/Users/xuxin/Documents/healthy/scripts/mcp-health-wrapper.js --workspace "$HERMES_USER_ROOT" --no-workspace-override --api-base-url "http://<windows-host-gateway>:4877"
+```
+
+When the caller is Hermes Agent/Gateway, add `--gateway-tool-names` so the
+wrapper exposes local tool names and lets Hermes apply its normal
+`mcp_<server>_` prefix:
+
+```bash
+node /path/to/mcp-health-wrapper.js --workspace "$HERMES_USER_ROOT" --no-workspace-override --gateway-tool-names --api-base-url "http://<health-host>:4877"
+```
+
 NAS startup example:
 
 ```bash
@@ -52,6 +67,10 @@ Rules:
 
 - Supports `--workspace <Hermes user root>`.
 - Supports `--no-workspace-override`.
+- Supports `--api-base-url <url>` for Gateway launch-time network routing; this does not allow model calls to override workspace, key, token, or cookie values.
+- Supports `--gateway-tool-names` for Hermes Agent/Gateway registration. Direct wrapper mode keeps the documented `mcp_health_*` names; Gateway mode exposes local names that Hermes prefixes to the same final callable names.
+- Sends Health write requests as `application/json; charset=utf-8`.
+- Rejects corrupted text such as `????`, replacement characters, or common mojibake with `invalid_text_encoding` before writing data.
 - Fails closed when `.hermes-health/config.json` or `access-key.txt` is missing.
 - Does not accept model-supplied workspace, key, token, or cookie overrides.
 - Does not fall back to Owner.
@@ -66,9 +85,13 @@ mcp_health_profile_get
 mcp_health_profile_update
 mcp_health_medications_list
 mcp_health_medication_add
+mcp_health_strength_exercise_catalog_list
 mcp_health_strength_sessions_list
 mcp_health_strength_session_record
 mcp_health_strength_session_update
+mcp_health_cardio_activity_catalog_list
+mcp_health_cardio_sessions_list
+mcp_health_cardio_session_record
 mcp_health_body_measurements_list
 mcp_health_body_measurement_record
 mcp_health_body_measurement_update
@@ -80,6 +103,31 @@ The wrapper supports standard JSON-RPC MCP messages over stdio:
 - `initialize`
 - `tools/list`
 - `tools/call`
+
+## Training Catalog Contract
+
+Workout image/OCR parsing must not invent persistent categories. The MCP
+contract exposes canonical catalogs so Hermes Mobile and the model can map raw
+labels into stable Health keys before writing:
+
+- `mcp_health_strength_exercise_catalog_list`
+- `mcp_health_cardio_activity_catalog_list`
+
+Write rules:
+
+- Strength writes should pass `set.exercise.key` or a recognized
+  `set.exercise.name` alias. The Health service stores the canonical exercise
+  key for grouping and statistics.
+- Cardio writes should pass `activityType` as a canonical key such as
+  `indoor_walk` or a recognized alias; the Health service stores the canonical
+  key.
+- Raw parsed labels from screenshots may be preserved in notes/source metadata,
+  but must not become the grouping key.
+- Unknown strength exercises fail with `unsupported_exercise`.
+- Unknown cardio activities fail with `unsupported_activity_type`.
+- The model must not use `mcp_health_clinical_event_record` for strength or
+  cardio workouts. Clinical events are for exams, checkups, imaging,
+  procedures, and similar medical timeline records.
 
 ## Workspace Binding
 
@@ -100,7 +148,10 @@ Read and summary:
 - `mcp_health_records_get_summary`
 - `mcp_health_profile_get`
 - `mcp_health_medications_list`
+- `mcp_health_strength_exercise_catalog_list`
 - `mcp_health_strength_sessions_list`
+- `mcp_health_cardio_activity_catalog_list`
+- `mcp_health_cardio_sessions_list`
 - `mcp_health_body_measurements_list`
 - `mcp_health_metrics_trends`
 
@@ -110,6 +161,7 @@ Write and update:
 - `mcp_health_medication_add`
 - `mcp_health_strength_session_record`
 - `mcp_health_strength_session_update`
+- `mcp_health_cardio_session_record`
 - `mcp_health_body_measurement_record`
 - `mcp_health_body_measurement_update`
 

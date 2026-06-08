@@ -1,4 +1,5 @@
 const { inputError } = require("../../utils/errors");
+const { assertCleanText } = require("../../utils/text-integrity");
 const { normalizeLength, normalizeWeight } = require("../../utils/units");
 const { nowIso } = require("../../utils/time");
 
@@ -22,6 +23,7 @@ function createProfileService({ userRepository, clock }) {
   }
 
   function saveProfile(input) {
+    assertCleanText(input.profile, "profile");
     const user = getUserByWorkspace(input.workspaceRef);
     const profile = saveProfileForUser(user.id, input.profile || {});
     return { user, profile };
@@ -44,6 +46,7 @@ function createProfileService({ userRepository, clock }) {
   }
 
   function addMedication(input) {
+    assertCleanText(input.medication, "medication");
     const user = getUserByWorkspace(input.workspaceRef);
     const medication = input.medication || {};
     if (!medication.name || typeof medication.name !== "string") {

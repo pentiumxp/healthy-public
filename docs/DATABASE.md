@@ -141,8 +141,37 @@
 
 约束：
 
+- 首版实现中 `name` 保存 canonical key，是统计、分组、趋势和 MCP 写入的稳定键，不使用 OCR/模型解析出的自由文本做分组键。
+- 后续如需把显示名和 key 拆开，可新增 `canonical_key` / `display_name` 字段并做迁移；迁移前不要改变 `name` 的 canonical 语义。
 - 系统动作 `user_id` 可为空。
 - 用户自定义动作必须有 `user_id`。
+- 首版不允许模型自动创建用户自定义动作；未命中 catalog/alias 的动作应返回 `unsupported_exercise` 或进入导入候选确认流程。
+- UI/MCP 输出通过 catalog 把 canonical key 映射为中文优先显示名，括号中可带英文说明。
+
+首版系统动作 canonical key：
+
+| canonical_key | 中文显示名 | 常见 alias |
+|---|---|---|
+| `barbell_back_squat` | 杠铃深蹲 | 深蹲、杠铃深蹲、Barbell Squat、Back Squat、Squat |
+| `barbell_overhead_press` | 杠铃推肩 | 推肩、杠铃推举、杠铃肩推、Overhead Press、Barbell Overhead Press |
+| `barbell_bench_press` | 杠铃卧推 | 卧推、平板卧推、Bench Press、Barbell Bench Press |
+| `barbell_deadlift` | 杠铃硬拉 | 硬拉、Deadlift、Barbell Deadlift |
+| `barbell_row` | 杠铃划船 | 划船、Barbell Row、Bent-over Row |
+| `pull_up` | 引体向上 | 引体、Pull-up、Pullup |
+
+### exercise_aliases
+
+- `id`
+- `canonical_key`
+- `alias`
+- `locale`
+- `source`
+
+约束：
+
+- alias 匹配只用于归一化，不作为长期统计 key。
+- 同一个 alias 只能指向一个 canonical key。
+- 模型/OCR 写入可以附带原始解析文本，但入库动作必须先归一到 canonical key。
 
 ### strength_sessions
 
@@ -180,6 +209,25 @@
 - 同一 `session_id + exercise_id + set_index` 唯一。
 
 ## 有氧训练
+
+有氧训练同样使用固定 activity catalog。入库字段 `activity_type` 保存
+canonical key，不保存模型自由文本。首版系统 activity key：
+
+| activity_type | 中文显示名 | 常见 alias |
+|---|---|---|
+| `indoor_walk` | 室内步行 | 室内走路、跑步机步行、Treadmill Walk、Indoor Walk、Technogym walk |
+| `outdoor_walk` | 户外步行 | 户外走路、Outdoor Walk |
+| `elliptical` | 椭圆机 | 椭圆仪、Elliptical、Cross Trainer |
+| `run` | 跑步 | Running、Run |
+| `cycling` | 骑行 | 单车、Cycling、Bike |
+| `rowing` | 划船机 | Rowing、Rowing Machine |
+| `other` | 其他有氧 | 仅在人工确认后使用 |
+
+约束：
+
+- 服务端必须把 alias 归一到上述 canonical key。
+- 未命中 alias 的 activity 不得自动创建新分类，应返回 `unsupported_activity_type`。
+- 图片/OCR 的原始活动描述只能作为来源/notes/候选字段，不得成为统计分组键。
 
 ### cardio_sessions
 
@@ -296,6 +344,21 @@
 
 ### lab_results
 
+## 2026-06 Medical Timeline Tables
+
+The first medical-profile expansion adds append-friendly tables for longitudinal checkup data. Annual physical exams, lab values, imaging findings, symptoms, sleep/recovery observations, risk assessments, and follow-up tasks must be stored as timeline records, not as latest-only profile fields.
+
+Implemented tables:
+
+- `source_documents`: bounded metadata for imported reports and Markdown summaries. It stores `title`, `document_type`, optional `document_date`, `source_ref`, `source_hash`, `privacy_level`, `summary`, and `metadata_json`. It must not store raw report text or private attachments.
+- `lab_results`: one row per lab value with `observed_at`, `panel`, `test_name`, optional `test_code`, numeric `value`, `unit`, reference range fields, `flag`, source document link, and notes.
+- `clinical_events`: one row per checkup, imaging exam, cardiac test, renal scan, ultrasound, or similar event with `event_date`, `event_type`, `title`, `institution`, summary, source document link, confidence, and metadata.
+- `clinical_findings`: one row per structured finding such as plaque, stenosis, fatty liver, borderline renal function, or low testosterone pattern. It stores `finding_key`, title, status, severity, body site, onset/observed dates, evidence, source links, confidence, and notes.
+- `symptoms`: one row per symptom observation with `observed_at`, `symptom_key`, severity, duration, frequency, status, notes, and optional source document link.
+- `recovery_sleep_records`: one row per sleep/recovery observation with sleep start/end, total sleep, REM, deep sleep, HRV, resting heart rate, recovery score, source type, and notes.
+- `risk_profiles`: one row per risk assessment with `assessed_at`, `risk_key`, label, priority, status, confidence, summary, and evidence. New assessments append rows instead of overwriting prior years.
+- `followup_tasks`: one row per follow-up item with title, category, priority, status, due date, notes, and source document link.
+
 - 指标名、数值、单位、参考范围、异常标记、检测时间、机构、来源文件。
 
 ## 分析结果
@@ -316,4 +379,3 @@
 
 - 分析结果可重算，不作为原始事实。
 - 分析必须记录输入范围，便于解释和复现。
-

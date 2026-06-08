@@ -1,8 +1,10 @@
-function createDashboardService({ profileService, strengthService, bodyService }) {
+function createDashboardService({ profileService, strengthService, cardioService, bodyService, medicalRecordsService }) {
   function getDashboard(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const strengthSessions = strengthService.listSessions({ workspaceRef: user.workspace_ref });
+    const cardioSessions = cardioService ? cardioService.listSessions({ workspaceRef: user.workspace_ref }) : [];
     const bodyMeasurements = bodyService.listMeasurements({ workspaceRef: user.workspace_ref });
+    const medications = profileService.listActiveMedications({ workspaceRef: user.workspace_ref });
     return {
       workspace: {
         id: user.workspace_ref,
@@ -11,13 +13,62 @@ function createDashboardService({ profileService, strengthService, bodyService }
         isolated: true
       },
       profile: summarizeProfile(profileService, user),
+      medications: { activeCount: medications.length },
       strength: summarizeStrength(strengthSessions),
+      cardio: summarizeCardio(cardioSessions),
       body: summarizeBody(bodyMeasurements),
+      medical: summarizeMedical(medicalRecordsService, user.workspace_ref),
       pendingReview: bodyMeasurements.filter((item) => item.confirmation_status === "pending").length
     };
   }
 
   return { getDashboard };
+}
+
+function summarizeCardio(sessions) {
+  return {
+    latestSession: sessions[0] || null,
+    sessionCount: sessions.length,
+    totalDistanceKm: round(sessions.reduce((total, session) => total + (session.distance_km || 0), 0), 2),
+    totalDurationMinutes: Math.round(sessions.reduce((total, session) => total + (session.duration_seconds || 0), 0) / 60),
+    recentSessions: sessions.slice(0, 6)
+  };
+}
+
+function summarizeMedical(service, workspaceRef) {
+  if (!service) return {};
+  const labResults = service.list("labResults", { workspaceRef }).records;
+  const clinicalEvents = service.list("clinicalEvents", { workspaceRef }).records;
+  const clinicalFindings = service.list("clinicalFindings", { workspaceRef }).records;
+  const riskProfiles = service.list("riskProfiles", { workspaceRef }).records;
+  const followupTasks = service.list("followupTasks", { workspaceRef, status: "open" }).records;
+  return {
+    counts: {
+      labResults: labResults.length,
+      clinicalEvents: clinicalEvents.length,
+      clinicalFindings: clinicalFindings.length,
+      riskProfiles: riskProfiles.length,
+      openFollowups: followupTasks.length
+    },
+    latestLabs: labResults.slice(0, 4).map((row) => ({
+      observedAt: row.observed_at,
+      testName: row.test_name,
+      value: row.value,
+      unit: row.unit,
+      flag: row.flag
+    })),
+    topRisks: riskProfiles.slice(0, 4).map((row) => ({
+      assessedAt: row.assessed_at,
+      label: row.label,
+      priority: row.priority,
+      status: row.status
+    }))
+  };
+}
+
+function round(value, digits) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
 }
 
 function summarizeProfile(profileService, user) {

@@ -21,6 +21,35 @@ test("strength sessions normalize pounds to kilograms and summarize volume", () 
   assert.equal(dashboard.strength.weeklyVolumeKg, 527);
 });
 
+test("strength sessions normalize exercise aliases to canonical catalog keys", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  services.strengthService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-02T19:00:00+08:00",
+    sets: [
+      { exercise: { name: "杠铃深蹲" }, weightValue: 65, weightUnit: "kg", reps: 10 },
+      { exercise: { key: "barbell_overhead_press" }, weightValue: 30, weightUnit: "kg", reps: 8 }
+    ]
+  });
+
+  const sessions = services.strengthService.listSessions({ workspaceRef: "health:weixin_test_1" });
+  assert.deepEqual(sessions[0].sets.map((set) => set.exercise_name), ["barbell_back_squat", "barbell_overhead_press"]);
+});
+
+test("strength sessions reject unknown exercise labels", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  assert.throws(() => services.strengthService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-02T19:00:00+08:00",
+    sets: [{ exercise: { name: "random machine from OCR" }, weightValue: 30, weightUnit: "kg", reps: 8 }]
+  }), /unsupported strength exercise/);
+  assert.equal(services.strengthService.listSessions({ workspaceRef: "health:weixin_test_1" }).length, 0);
+});
+
 test("body measurements keep pending candidates out of confirmed dashboard metrics", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");
@@ -47,3 +76,45 @@ test("body measurements keep pending candidates out of confirmed dashboard metri
   assert.equal(dashboard.pendingReview, 1);
 });
 
+test("cardio sessions normalize distance and appear in dashboard", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  const saved = services.cardioService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-04T19:52:00+08:00",
+    activityType: "indoor_walk",
+    durationSeconds: 1504,
+    distanceValue: 2280,
+    distanceUnit: "m",
+    averageHeartRateBpm: 120
+  });
+
+  assert.equal(saved.distance_km, 2.28);
+  const dashboard = services.dashboardService.getDashboard({ workspaceRef: "health:weixin_test_1" });
+  assert.equal(dashboard.cardio.sessionCount, 1);
+  assert.equal(dashboard.cardio.totalDistanceKm, 2.28);
+  assert.equal(dashboard.cardio.latestSession.activity_type, "indoor_walk");
+});
+
+test("cardio sessions normalize activity aliases and reject unknown activities", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  const saved = services.cardioService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-04T19:52:00+08:00",
+    activityType: "室内步行",
+    durationSeconds: 1504,
+    distanceValue: 2.28,
+    distanceUnit: "km"
+  });
+  assert.equal(saved.activity_type, "indoor_walk");
+  assert.throws(() => services.cardioService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-05T19:52:00+08:00",
+    activityType: "photo guessed activity",
+    durationSeconds: 1504
+  }), /unsupported cardio activity type/);
+  assert.equal(services.cardioService.listSessions({ workspaceRef: "health:weixin_test_1" }).length, 1);
+});

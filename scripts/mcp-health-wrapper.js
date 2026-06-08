@@ -7,13 +7,30 @@ const { TOOLS, callTool } = require("./mcp/health-tools");
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const context = loadWorkspaceContext(args);
+  const tools = toolsForMode(args);
   if (args.listTools) {
-    process.stdout.write(JSON.stringify({ tools: TOOLS }) + "\n");
+    process.stdout.write(JSON.stringify({ tools }) + "\n");
     return;
   }
   const client = createHealthClient(context);
-  await createMcpServer({ tools: TOOLS, callTool: (request) => callTool(request, client) }).run();
+  await createMcpServer({ tools, callTool: (request) => callTool(requestForMode(args, request), client) }).run();
   process.exit(0);
+}
+
+function toolsForMode(args) {
+  if (!args.gatewayToolNames) return TOOLS;
+  return TOOLS.map((tool) => ({ ...tool, name: stripHealthPrefix(tool.name) }));
+}
+
+function requestForMode(args, request) {
+  if (!args.gatewayToolNames) return request;
+  const name = request.params && request.params.name;
+  if (!name || String(name).startsWith("mcp_health_")) return request;
+  return { ...request, params: { ...request.params, name: `mcp_health_${name}` } };
+}
+
+function stripHealthPrefix(name) {
+  return String(name || "").replace(/^mcp_health_/, "");
 }
 
 main().catch((error) => {

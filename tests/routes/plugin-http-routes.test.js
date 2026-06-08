@@ -26,6 +26,35 @@ test("manifest exposes unified Hermes plugin discovery fields", async () => {
   }
 });
 
+test("embedded UI serves Chinese display label script", async () => {
+  const server = createServer(createTestServices());
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const response = await fetch(`${base}/health-labels.js`);
+    const text = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /application\/javascript/);
+    assert.match(text, /HealthLabels/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("embedded UI serves cardio module script", async () => {
+  const server = createServer(createTestServices());
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const response = await fetch(`${base}/health-cardio.js`);
+    const text = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(text, /HealthCardio/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("registration requires configured service key and rejects wrong key with stable diagnostics", async () => {
   const missingKeyServices = createTestServices({ registrationKey: "" });
   const missingKeyServer = createServer(missingKeyServices);

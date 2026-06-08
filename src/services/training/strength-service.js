@@ -1,9 +1,12 @@
 const { inputError } = require("../../utils/errors");
+const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeWeight } = require("../../utils/units");
+const { normalizeStrengthExercise } = require("./training-catalog");
 
 function createStrengthService({ profileService, trainingRepository, db }) {
   function recordSession(input) {
+    assertCleanText(input, "strengthSession");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const sets = input.sets || [];
     if (!Array.isArray(sets) || sets.length === 0) {
@@ -33,13 +36,12 @@ function createStrengthService({ profileService, trainingRepository, db }) {
   }
 
   function saveSet(userId, sessionId, set, defaultIndex) {
-    if (!set.exercise || !set.exercise.name) {
-      throw inputError("set.exercise.name is required");
-    }
+    const exercise = normalizeStrengthExercise(set.exercise);
+    if (!exercise) throw inputError("unsupported strength exercise", "unsupported_exercise");
     const reps = Number(set.reps);
     if (!Number.isInteger(reps) || reps <= 0) throw inputError("reps must be a positive integer");
-    const exercise = trainingRepository.ensureExercise(userId, set.exercise);
-    return trainingRepository.addSet(sessionId, exercise.id, {
+    const savedExercise = trainingRepository.ensureExercise(userId, exercise);
+    return trainingRepository.addSet(sessionId, savedExercise.id, {
       setIndex: set.setIndex || defaultIndex,
       weightKg: normalizeWeight(set.weightValue ?? set.weightKg ?? 0, set.weightUnit || "kg"),
       reps,
@@ -55,11 +57,12 @@ function createStrengthService({ profileService, trainingRepository, db }) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     return trainingRepository.listSessions(user.id).map((session) => ({
       ...session,
-      sets: trainingRepository.listSetsForSession(session.id)
+      sets: trainingRepository.listSetsForSession(session.id).map(normalizeListedSet)
     }));
   }
 
   function updateSession(input) {
+    assertCleanText(input, "strengthSession");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     if (!input.sessionId) throw inputError("sessionId is required");
     const patch = {};
@@ -73,6 +76,11 @@ function createStrengthService({ profileService, trainingRepository, db }) {
     const session = trainingRepository.updateSession(user.id, input.sessionId, patch);
     if (!session) throw inputError("strength session is not found", "record_not_found");
     return { session, sets: trainingRepository.listSetsForSession(session.id) };
+  }
+
+  function normalizeListedSet(set) {
+    const exercise = normalizeStrengthExercise({ name: set.exercise_name });
+    return exercise ? { ...set, exercise_name: exercise.name } : set;
   }
 
   return { listSessions, recordSession, updateSession };

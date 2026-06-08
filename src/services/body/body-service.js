@@ -1,4 +1,5 @@
 const { inputError } = require("../../utils/errors");
+const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeLength, normalizeWeight } = require("../../utils/units");
 
@@ -16,6 +17,7 @@ const BODY_METRICS = new Set([
 
 function createBodyService({ profileService, bodyRepository }) {
   function recordMeasurement(input) {
+    assertCleanText(input, "bodyMeasurement");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const metric = input.metric;
     if (!BODY_METRICS.has(metric)) throw inputError("unsupported body metric", "unsupported_metric");
@@ -64,6 +66,7 @@ function createBodyService({ profileService, bodyRepository }) {
   }
 
   function updateMeasurement(input) {
+    assertCleanText(input, "bodyMeasurement");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     if (!input.measurementId) throw inputError("measurementId is required");
     const existing = bodyRepository.listMeasurements(user.id).find((item) => item.id === input.measurementId);

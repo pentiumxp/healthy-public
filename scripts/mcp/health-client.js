@@ -9,7 +9,7 @@ function createHealthClient(context) {
       method,
       headers: {
         Authorization: `Bearer ${context.accessKey}`,
-        ...(body ? { "content-type": "application/json" } : {})
+        ...(body ? { "content-type": "application/json; charset=utf-8" } : {})
       },
       body: body ? JSON.stringify(body) : undefined
     });
@@ -23,14 +23,19 @@ function createHealthClient(context) {
 
   return {
     addMedication: (medication) => request("POST", "/api/v1/profile/medications", medication),
+    createCardioSession: (session) => request("POST", "/api/v1/cardio/sessions", session),
+    createMedicalRecord: (kind, record) => request("POST", `/api/v1/medical/${kind}`, record),
     getDashboard: () => request("GET", "/api/v1/dashboard"),
     getProfile: () => request("GET", "/api/v1/profile"),
+    listMedicalRecords: (kind, query) => request("GET", `/api/v1/medical/${kind}`, null, query),
     listBodyMeasurements: (args) => request("GET", "/api/v1/body/measurements", null, { metric: args.metric }),
+    listCardioSessions: () => request("GET", "/api/v1/cardio/sessions"),
     listMedications: () => request("GET", "/api/v1/profile/medications"),
     listStrengthSessions: () => request("GET", "/api/v1/strength/sessions"),
     recordBodyMeasurement: (measurement) => request("POST", "/api/v1/body/measurements", measurement),
     recordStrengthSession: (session) => request("POST", "/api/v1/strength/sessions", session),
     updateBodyMeasurement: (id, patch) => request("PATCH", `/api/v1/body/measurements/${encodeURIComponent(id)}`, patch),
+    updateMedicalRecord: (kind, id, patch) => request("PATCH", `/api/v1/medical/${kind}/${encodeURIComponent(id)}`, patch),
     updateProfile: (profile) => request("PUT", "/api/v1/profile", { profile }),
     updateStrengthSession: (id, patch) => request("PATCH", `/api/v1/strength/sessions/${encodeURIComponent(id)}`, patch)
   };

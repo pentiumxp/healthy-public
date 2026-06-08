@@ -8,6 +8,8 @@ function parseArgs(argv) {
     if (arg === "--workspace") args.workspace = argv[++i];
     else if (arg === "--no-workspace-override") args.noWorkspaceOverride = true;
     else if (arg === "--list-tools") args.listTools = true;
+    else if (arg === "--api-base-url") args.apiBaseUrl = argv[++i];
+    else if (arg === "--gateway-tool-names") args.gatewayToolNames = true;
   }
   return args;
 }
@@ -24,7 +26,7 @@ function loadWorkspaceContext(args) {
   if (!config.base_url || !config.workspace_id || !accessKey) {
     failClosed("health workspace config is incomplete");
   }
-  return { accessKey, baseUrl: config.base_url, workspaceId: config.workspace_id };
+  return { accessKey, baseUrl: String(args.apiBaseUrl || config.base_url).trim(), workspaceId: config.workspace_id };
 }
 
 function failClosed(message) {

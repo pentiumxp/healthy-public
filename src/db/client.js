@@ -12,8 +12,10 @@ function openDatabase(databasePath = ":memory:") {
 }
 
 function applyMigrations(db) {
-  const migrationPath = path.join(__dirname, "migrations", "001_initial.sql");
-  db.exec(fs.readFileSync(migrationPath, "utf8"));
+  const migrationsDir = path.join(__dirname, "migrations");
+  for (const file of fs.readdirSync(migrationsDir).filter((name) => name.endsWith(".sql")).sort()) {
+    db.exec(fs.readFileSync(path.join(migrationsDir, file), "utf8"));
+  }
 }
 
 function createMigratedDatabase(databasePath = ":memory:") {
@@ -23,4 +25,3 @@ function createMigratedDatabase(databasePath = ":memory:") {
 }
 
 module.exports = { applyMigrations, createMigratedDatabase, openDatabase };
-

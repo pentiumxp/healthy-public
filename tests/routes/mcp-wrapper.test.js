@@ -7,6 +7,7 @@ const test = require("node:test");
 const { createServer } = require("../../src/app/http-server");
 const { sha256 } = require("../../src/utils/auth");
 const { createTestServices } = require("../test-helpers");
+const { loadWorkspaceContext, parseArgs } = require("../../scripts/mcp/health-context");
 
 const WRAPPER = path.resolve(__dirname, "..", "..", "scripts", "mcp-health-wrapper.js");
 
@@ -37,10 +38,69 @@ test("MCP wrapper lists mcp_health callable from workspace-local config", () => 
   assert.equal(result.status, 0);
   const parsed = JSON.parse(result.stdout);
   assert.equal(parsed.tools[0].name, "mcp_health_records_get_summary");
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_strength_exercise_catalog_list"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_cardio_activity_catalog_list"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_profile_update"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_strength_session_record"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_cardio_session_record"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_body_measurement_update"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_lab_result_record"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_risk_profile_record"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_followup_task_create"));
   assert.doesNotMatch(result.stdout, /synthetic-key/);
+});
+
+test("MCP wrapper can expose gateway-local tool names", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "healthy-mcp-gateway-names-"));
+  const healthDir = path.join(workspace, ".hermes-health");
+  fs.mkdirSync(healthDir);
+  fs.writeFileSync(path.join(healthDir, "config.json"), JSON.stringify({
+    base_url: "http://127.0.0.1:4877",
+    workspace_id: "health:weixin_test_1"
+  }));
+  fs.writeFileSync(path.join(healthDir, "access-key.txt"), "synthetic-key");
+
+  const result = spawnSync(process.execPath, [
+    WRAPPER,
+    "--workspace",
+    workspace,
+    "--no-workspace-override",
+    "--gateway-tool-names",
+    "--list-tools"
+  ], {
+    encoding: "utf8"
+  });
+
+  assert.equal(result.status, 0);
+  const parsed = JSON.parse(result.stdout);
+  assert.ok(parsed.tools.some((tool) => tool.name === "lab_result_record"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "strength_exercise_catalog_list"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "cardio_activity_catalog_list"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "risk_profile_record"));
+  assert.ok(!parsed.tools.some((tool) => tool.name === "mcp_health_lab_result_record"));
+  assert.doesNotMatch(result.stdout, /synthetic-key/);
+});
+
+test("MCP wrapper launch context can override API base URL", () => {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "healthy-mcp-api-base-"));
+  const healthDir = path.join(workspace, ".hermes-health");
+  fs.mkdirSync(healthDir);
+  fs.writeFileSync(path.join(healthDir, "config.json"), JSON.stringify({
+    base_url: "http://127.0.0.1:4877",
+    workspace_id: "health:weixin_test_1"
+  }));
+  fs.writeFileSync(path.join(healthDir, "access-key.txt"), "synthetic-key");
+
+  const context = loadWorkspaceContext(parseArgs([
+    "--workspace",
+    workspace,
+    "--no-workspace-override",
+    "--api-base-url",
+    "http://172.27.192.1:4877"
+  ]));
+
+  assert.equal(context.baseUrl, "http://172.27.192.1:4877");
+  assert.equal(context.workspaceId, "health:weixin_test_1");
 });
 
 test("MCP wrapper can write and read workspace-local health data", async () => {
@@ -65,6 +125,15 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     });
     assert.equal(strength.sets.length, 1);
 
+    const cardio = await mcpCall(workspace, "mcp_health_cardio_session_record", {
+      startedAt: "2026-06-04T19:52:00+08:00",
+      activityType: "indoor_walk",
+      durationSeconds: 1504,
+      distanceValue: 2.28,
+      distanceUnit: "km"
+    });
+    assert.equal(cardio.activity_type, "indoor_walk");
+
     const body = await mcpCall(workspace, "mcp_health_body_measurement_record", {
       measuredAt: "2026-06-02T08:00:00+08:00",
       metric: "weight",
@@ -81,6 +150,29 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     assert.equal(summary.workspace_id, "health:weixin_test_1");
     assert.equal(summary.summary.strength_sessions, 1);
     assert.equal(summary.summary.latest_body_metrics.weight.value, 80.5);
+
+    const lab = await mcpCall(workspace, "mcp_health_lab_result_record", {
+      observedAt: "2026-06-02T08:00:00+08:00",
+      testName: "ALT",
+      value: 59.2,
+      unit: "U/L",
+      panel: "liver"
+    });
+    assert.equal(lab.test_name, "ALT");
+    const risks = await mcpCall(workspace, "mcp_health_risk_profile_record", {
+      assessedAt: "2026-06-02T08:00:00+08:00",
+      riskKey: "atherosclerosis",
+      label: "Atherosclerosis with coronary plaque",
+      priority: 1
+    });
+    assert.equal(risks.risk_key, "atherosclerosis");
+    await mcpCall(workspace, "mcp_health_followup_task_create", {
+      title: "Repeat ALT with CK",
+      category: "lab_review",
+      status: "open"
+    });
+    const labs = await mcpCall(workspace, "mcp_health_lab_results_list", { testName: "ALT" });
+    assert.equal(labs.records.length, 1);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -103,6 +195,25 @@ test("MCP wrapper rejects model-supplied workspace or credential overrides", asy
     });
     assert.equal(result.error.message, "forbidden_argument");
     assert.doesNotMatch(JSON.stringify(result), /synthetic-key/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("MCP wrapper rejects corrupted text before writing health data", async () => {
+  const services = createTestServices();
+  services.pluginService.provision({
+    workspace_id: "health:weixin_test_1",
+    hermes_workspace_id: "weixin_test_1",
+    access_key_hash: sha256("synthetic-key")
+  }, "registration-key");
+  const server = createServer(services);
+  await listen(server);
+  const workspace = createMcpWorkspace(`http://127.0.0.1:${server.address().port}`);
+  try {
+    const result = await mcpRequest(workspace, "mcp_health_medication_add", { name: "????", frequency: "daily" });
+    assert.equal(result.error.message, "invalid_text_encoding");
+    assert.equal(services.profileService.listActiveMedications({ workspaceRef: "health:weixin_test_1" }).length, 0);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

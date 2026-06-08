@@ -1,85 +1,86 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark" data-plugin-font-size="normal">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>健康</title>
+    <meta name="theme-color" content="#000000" />
+    <title>&#x5065;&#x5eb7;</title>
+    <script>
+      (function () {
+        var appearance = window.__HEALTH_PLUGIN_APPEARANCE__ || {};
+        var theme = ["system", "light", "dark"].indexOf(appearance.theme) >= 0
+          ? appearance.theme
+          : localStorage.getItem("hermesWebTheme") || "dark";
+        var fontSize = ["compact", "normal", "large", "xlarge"].indexOf(appearance.fontSize) >= 0
+          ? appearance.fontSize
+          : localStorage.getItem("healthPluginFontSize") || "normal";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.pluginFontSize = fontSize;
+      })();
+    </script>
     <link rel="stylesheet" href="/health.css" />
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
+        <button type="button" class="back hidden" id="backButton" aria-label="Back">&#x2039;</button>
         <div>
-          <h1>健康</h1>
-          <p id="workspaceLabel">工作区：未绑定</p>
+          <h1 id="pageTitle">&#x5065;&#x5eb7;</h1>
+          <p id="workspaceLabel">&#x5de5;&#x4f5c;&#x533a;&#xff1a;&#x672a;&#x7ed1;&#x5b9a;</p>
         </div>
-        <span class="status">已隔离</span>
+        <span class="status">&#x5df2;&#x9694;&#x79bb;</span>
       </header>
 
-      <section class="profile-grid" aria-label="Profile">
-        <div class="metric">
-          <span>身高</span>
-          <strong id="heightValue">--</strong>
-        </div>
-        <div class="metric">
-          <span>目标体重</span>
-          <strong id="targetWeightValue">--</strong>
-        </div>
-        <div class="metric">
-          <span>当前用药</span>
-          <strong id="medicationCount">0</strong>
-        </div>
-      </section>
+      <div id="homeView">
+        <section class="profile-grid" aria-label="Profile">
+          <div class="metric"><span>&#x8eab;&#x9ad8;</span><strong id="heightValue">--</strong></div>
+          <div class="metric"><span>&#x76ee;&#x6807;&#x4f53;&#x91cd;</span><strong id="targetWeightValue">--</strong></div>
+          <button type="button" class="metric metric-button" id="medicationButton"><span>&#x5f53;&#x524d;&#x7528;&#x836f;</span><strong id="medicationCount">0</strong></button>
+        </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2>力量训练</h2>
-            <p id="latestStrength">暂无训练记录</p>
+        <section class="panel">
+          <div class="panel-head">
+            <div><h2>&#x529b;&#x91cf;&#x8bad;&#x7ec3;</h2><p id="latestStrength">&#x6682;&#x65e0;&#x8bad;&#x7ec3;&#x8bb0;&#x5f55;</p></div>
+            <div class="counter"><span>&#x603b;&#x8bad;&#x7ec3;&#x91cf;</span><strong id="weeklyVolume">0 kg</strong></div>
           </div>
-          <div class="counter">
-            <span>本周训练量</span>
-            <strong id="weeklyVolume">0 kg</strong>
-          </div>
-        </div>
-        <div class="bars" id="strengthChart" aria-label="Strength volume chart"></div>
-      </section>
+          <div class="bars" id="strengthChart" aria-label="Strength volume chart"></div>
+          <div class="section-list" id="strengthList"></div>
+        </section>
 
-      <section class="panel">
-        <div class="panel-head">
-          <div>
-            <h2>身体指标</h2>
-            <p>最近确认数据</p>
+        <section class="panel">
+          <div class="panel-head">
+            <div><h2>&#x6709;&#x6c27;&#x8bad;&#x7ec3;</h2><p id="latestCardio">&#x6682;&#x65e0;&#x6709;&#x6c27;&#x8bb0;&#x5f55;</p></div>
+            <div class="counter"><span>&#x603b;&#x91cc;&#x7a0b;</span><strong id="cardioDistance">0 km</strong></div>
           </div>
-        </div>
-        <div class="body-grid">
-          <div class="body-item">
-            <span>体重</span>
-            <strong id="weightMetric">--</strong>
-            <i id="weightTrend"></i>
-          </div>
-          <div class="body-item">
-            <span>体脂率</span>
-            <strong id="fatMetric">--</strong>
-            <i id="fatTrend"></i>
-          </div>
-          <div class="body-item">
-            <span>骨骼肌量</span>
-            <strong id="muscleMetric">--</strong>
-            <i id="muscleTrend"></i>
-          </div>
-        </div>
-      </section>
+          <div class="section-list" id="cardioList"></div>
+        </section>
 
-      <section class="review">
-        <div>
-          <h2>待确认数据</h2>
-          <p id="pendingText">没有待确认的导入候选</p>
-        </div>
-        <button type="button" id="refreshButton">刷新</button>
-      </section>
+        <section class="panel">
+          <div class="panel-head"><div><h2>&#x8eab;&#x4f53;&#x6307;&#x6807;</h2><p>&#x6700;&#x8fd1;&#x786e;&#x8ba4;&#x6570;&#x636e;</p></div></div>
+          <div class="body-grid">
+            <div class="body-item"><span>&#x4f53;&#x91cd;</span><strong id="weightMetric">--</strong><i id="weightTrend"></i></div>
+            <div class="body-item"><span>&#x4f53;&#x8102;&#x7387;</span><strong id="fatMetric">--</strong><i id="fatTrend"></i></div>
+            <div class="body-item"><span>&#x8170;&#x56f4;</span><strong id="waistMetric">--</strong><i id="waistTrend"></i></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><h2>&#x533b;&#x7597;&#x65f6;&#x95f4;&#x7ebf;</h2><p id="medicalCounts">&#x6682;&#x65e0;&#x533b;&#x7597;&#x8bb0;&#x5f55;</p></div></div>
+          <div class="medical-list" id="medicalList"></div>
+        </section>
+
+        <section class="review">
+          <div><h2>&#x5f85;&#x786e;&#x8ba4;&#x6570;&#x636e;</h2><p id="pendingText">&#x6ca1;&#x6709;&#x5f85;&#x786e;&#x8ba4;&#x7684;&#x5bfc;&#x5165;&#x5019;&#x9009;</p></div>
+          <button type="button" id="refreshButton">&#x5237;&#x65b0;</button>
+        </section>
+      </div>
+
+      <section class="detail hidden" id="detailView"></section>
     </main>
-    <script src="/health.js"></script>
+    <script src="/health-labels.js?v=20260604-2"></script>
+    <script src="/health-cardio.js?v=20260604-3"></script>
+    <script src="/health-theme.js?v=20260604-1"></script>
+    <script src="/health-strength.js?v=20260604-1"></script>
+    <script src="/health.js?v=20260604-2"></script>
   </body>
 </html>
-

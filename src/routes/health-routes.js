@@ -46,6 +46,17 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, services.strengthService.updateSession({ ...body, workspaceRef, sessionId }));
     return true;
   }
+  if (req.method === "POST" && url.pathname === "/api/v1/cardio/sessions") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.cardioService.recordSession({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/cardio/sessions") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, { sessions: services.cardioService.listSessions({ workspaceRef }) });
+    return true;
+  }
   if (req.method === "POST" && url.pathname === "/api/v1/body/measurements") {
     const body = await readJson(req);
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
