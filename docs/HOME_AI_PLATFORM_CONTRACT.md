@@ -1,7 +1,7 @@
 # Home AI Platform Contract Pointer
 
-Last updated: 2026-06-06.
-Home AI platform contract version: `20260606-v1`.
+Last updated: 2026-06-09.
+Home AI platform contract version: `20260609-v2`.
 
 ## Scope
 
@@ -19,6 +19,8 @@ behavior, or cross-plugin reference behavior:
 - `C:\Users\xuxin\Documents\Agent\docs\RUNBOOKS\macos-production-access.md`
 - `C:\Users\xuxin\Documents\Agent\docs\RUNBOOKS\mcp-tool-upgrade-closure.md`
 - `C:\Users\xuxin\Documents\Agent\docs\RUNBOOKS\macos-ios-simulator-appium.md`
+- `C:\Users\xuxin\Documents\Agent\docs\MODULES\ai-operations-control-plane.md`
+- `C:\Users\xuxin\Documents\Agent\docs\IMPLEMENTATION_NOTES\ai-operations-control-plane.md`
 - `C:\Users\xuxin\Documents\Agent\docs\IMPLEMENTATION_NOTES\reference-memory-graph-v1.md`
 - `C:\Users\xuxin\Documents\Agent\docs\IMPLEMENTATION_NOTES\reference-memory-graph-harness-plan.md`
 
@@ -42,6 +44,9 @@ behavior, or cross-plugin reference behavior:
 | `credential_locations` | Local ignored runtime config only by reference. Do not record raw tokens, health data payloads, uploaded files, or private user data here. |
 | `reference_contract_status` | `planned`; Health should later expose Reference Contract methods for profile, medication, body, strength, cardio, lab, and medical-record objects. |
 | `mobile_visual_harness_status` | Local static/theme/service tests exist; Home AI Appium/iOS Simulator evidence is required for embedded mobile UI, safe-area, tab layout, or PWA differences. |
+| `ai_ops_control_plane_command` | `cd /Users/hermes-dev/HermesMobileDev/app && node scripts/ai-ops-control-plane.js intake --task "<task>" --json` |
+| `ai_ops_required_flow` | `intake -> required-checks -> lane allocate if visual -> evidence append -> production smoke -> handoff` |
+| `ai_ops_evidence_ledger` | `$HOME/.homeai-qa/health-evidence-ledger.jsonl` |
 | `ios_live_debug_available` | `yes`; use Home AI `npm run ios:pwa:debug` for interactive embedded iOS PWA reproduction, with one Simulator/live-debug-port/WDA-port/MJPEG-port lane per concurrent plugin debug session. |
 | `ios_visual_harness_command` | `cd /Users/hermes-dev/HermesMobileDev/app && npm run ios:pwa:visual -- --scenario embedded-plugin-shell --plugin-id health --debug-url http://127.0.0.1:19073/` |
 
