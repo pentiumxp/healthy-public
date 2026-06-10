@@ -39,10 +39,7 @@
         const group = ensureGroup(map, key, raw, labels);
         group.sets.push(set);
         group.volumeKg += set.weight_kg * set.reps;
-        if (!group.sessionRefs.has(session.started_at)) {
-          group.sessionRefs.add(session.started_at);
-          group.sessions.push(session);
-        }
+        ensureGroupSession(group, session).sets.push(set);
       }
     }
     return [...map.values()].sort((a, b) => b.volumeKg - a.volumeKg);
@@ -50,9 +47,19 @@
 
   function ensureGroup(map, key, raw, labels) {
     if (!map.has(key)) {
-      map.set(key, { key, label: labels.exercise(raw), sessions: [], sessionRefs: new Set(), sets: [], volumeKg: 0 });
+      map.set(key, { key, label: labels.exercise(raw), sessions: [], sessionRefs: new Map(), sets: [], volumeKg: 0 });
     }
     return map.get(key);
+  }
+
+  function ensureGroupSession(group, session) {
+    const ref = session.id || session.started_at || `${group.key}:${group.sessions.length}`;
+    if (!group.sessionRefs.has(ref)) {
+      const groupedSession = { ...session, sets: [] };
+      group.sessionRefs.set(ref, groupedSession);
+      group.sessions.push(groupedSession);
+    }
+    return group.sessionRefs.get(ref);
   }
 
   function sessionButton(session, tools) {

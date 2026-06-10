@@ -10,11 +10,11 @@ test("strength UI groups only exercises present in stored sessions", () => {
   const sandbox = loadPublicModules(["health-labels.js", "health-strength.js"]);
   const labels = sandbox.window.HealthLabels;
   const groups = sandbox.window.HealthStrength.groupSessions([
-    { started_at: "2026-06-04T19:00:00+08:00", sets: [
+    { id: "session-a", started_at: "2026-06-04T19:00:00+08:00", sets: [
       { exercise_name: "Barbell Squat", weight_kg: 65, reps: 10 },
       { exercise_name: "Barbell Overhead Press", weight_kg: 30, reps: 8 }
     ] },
-    { started_at: "2026-06-03T19:00:00+08:00", sets: [
+    { id: "session-b", started_at: "2026-06-03T19:00:00+08:00", sets: [
       { exercise_name: "Barbell Squat", weight_kg: 60, reps: 10 }
     ] }
   ], labels);
@@ -23,6 +23,8 @@ test("strength UI groups only exercises present in stored sessions", () => {
     "\u6760\u94c3\u63a8\u80a9 (Barbell Overhead Press)"
   ]);
   assert.equal(groups[0].sessions.length, 2);
+  assert.deepEqual(Array.from(groups[0].sessions[0].sets, (set) => set.exercise_name), ["Barbell Squat"]);
+  assert.deepEqual(Array.from(groups[1].sessions[0].sets, (set) => set.exercise_name), ["Barbell Overhead Press"]);
   assert.equal(groups.some((group) => /Deadlift/.test(group.label)), false);
 });
 
