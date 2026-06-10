@@ -17,6 +17,13 @@ test("manifest exposes unified Hermes plugin discovery fields", async () => {
     assert.equal(manifest.mcp.server, "health-mcp");
     assert.equal(manifest.mcp.toolset, "health");
     assert.deepEqual(manifest.toolsets, ["health"]);
+    assert.deepEqual(manifest.actions.find((action) => action.id === "record_metric"), {
+      id: "record_metric",
+      label: "记录指标",
+      placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+      priority: 10,
+      entry: { type: "plugin_route", pluginRoute: "record_metric" }
+    });
     assert.equal(manifest.provisioning.endpoint, "/api/v1/hermes/plugin/workspaces");
     assert.equal(manifest.launch.endpoint, "/api/v1/hermes/plugin/launch");
     assert.equal(manifest.workspace.required, true);

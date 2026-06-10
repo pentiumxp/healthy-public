@@ -2,6 +2,15 @@ const { randomUUID } = require("node:crypto");
 const { inputError } = require("../../utils/errors");
 const { safeEqual, sha256 } = require("../../utils/auth");
 
+const HERMES_PLUGIN_ACTIONS = Object.freeze([
+  { id: "record_metric", label: "记录指标", route: "record_metric", priority: 10 },
+  { id: "trend", label: "趋势", route: "trend", priority: 20 },
+  { id: "workout", label: "记录训练", route: "workout", priority: 30 },
+  { id: "report", label: "健康报告", route: "report", priority: 40 },
+  { id: "medication", label: "用药/补剂", route: "medication", priority: 50 },
+  { id: "advice", label: "问健康建议", route: "advice", priority: 60 },
+]);
+
 function createPluginService({ userRepository, registrationKey, clock }) {
   const launchTokens = new Map();
   const tokenTtlSeconds = 300;
@@ -17,6 +26,13 @@ function createPluginService({ userRepository, registrationKey, clock }) {
       mcp: { server: "health-mcp", toolset: "health" },
       toolsets: ["health"],
       permissions: ["health:read", "health:write", "health:report"],
+      actions: HERMES_PLUGIN_ACTIONS.map((action) => ({
+        id: action.id,
+        label: action.label,
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: action.priority,
+        entry: { type: "plugin_route", pluginRoute: action.route }
+      })),
       embedding: { frameAncestors: ["hermes-origin"], postMessage: true, themeSync: true, sameOriginProxy: true, uploadProxy: true },
       workspace: { required: true, idFormat: "health:<hermes_workspace_id>" }
     };

@@ -2,8 +2,9 @@
   const params = new URLSearchParams(location.search);
   const workspaceId = params.get("workspace_id") || "";
   const launch = params.get("launch") || "";
+  const initialPluginRoute = String(params.get("pluginRoute") || params.get("route") || params.get("pluginActionId") || "").trim().toLowerCase();
   const labels = window.HealthLabels;
-  const state = { dashboard: null, strength: [], cardio: [], medications: [], medical: {}, view: "home" };
+  const state = { dashboard: null, strength: [], cardio: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false };
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
     noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55", noCardio: "\u6682\u65e0\u6709\u6c27\u8bb0\u5f55",
@@ -38,6 +39,7 @@
       state.medications = medications.medications || [];
       state.medical = { risks: risks.records || [], labs: labs.records || [], events: events.records || [], findings: findings.records || [], sleep: sleep.records || [] };
       renderHome();
+      applyInitialPluginRoute();
     } catch (error) {
       renderEmpty(error.message);
     }
@@ -102,6 +104,32 @@
     const detail = document.getElementById("detailView");
     const rows = state.medications.map(medicationRow);
     appendSection(detail, t.medicationList, rows.length ? rows : [emptyRow(t.noMedication)]);
+  }
+
+  function applyInitialPluginRoute() {
+    if (!initialPluginRoute || state.pluginRouteApplied) return;
+    state.pluginRouteApplied = true;
+    if (initialPluginRoute === "medication") {
+      renderMedicationList();
+      return;
+    }
+    if (initialPluginRoute === "report" || initialPluginRoute === "trend" || initialPluginRoute === "record_metric") {
+      const firstRisk = state.medical.risks[0];
+      if (firstRisk) renderIssueDetail(firstRisk);
+      return;
+    }
+    if (initialPluginRoute === "workout") {
+      const firstStrength = state.strength[0];
+      if (firstStrength) {
+        openDetail(t.setDetails);
+        appendText(document.getElementById("detailView"), fmtDate(firstStrength.started_at));
+      }
+      return;
+    }
+    if (initialPluginRoute === "advice") {
+      const firstRisk = state.medical.risks[0];
+      if (firstRisk) renderIssueDetail(firstRisk);
+    }
   }
 
   function relatedLabs(risk) {
