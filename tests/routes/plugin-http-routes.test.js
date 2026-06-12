@@ -32,7 +32,6 @@ test("manifest exposes unified Hermes plugin discovery fields", async () => {
     await new Promise((resolve) => server.close(resolve));
   }
 });
-
 test("embedded UI serves Chinese display label script", async () => {
   const server = createServer(createTestServices());
   await listen(server);
@@ -47,7 +46,6 @@ test("embedded UI serves Chinese display label script", async () => {
     await new Promise((resolve) => server.close(resolve));
   }
 });
-
 test("embedded UI serves cardio module script", async () => {
   const server = createServer(createTestServices());
   await listen(server);
@@ -61,7 +59,6 @@ test("embedded UI serves cardio module script", async () => {
     await new Promise((resolve) => server.close(resolve));
   }
 });
-
 test("registration requires configured service key and rejects wrong key with stable diagnostics", async () => {
   const missingKeyServices = createTestServices({ registrationKey: "" });
   const missingKeyServer = createServer(missingKeyServices);
@@ -91,7 +88,6 @@ test("registration requires configured service key and rejects wrong key with st
     await new Promise((resolve) => server.close(resolve));
   }
 });
-
 test("registration is idempotent and stores one workspace-local profile", async () => {
   const services = createTestServices();
   const server = createServer(services);
@@ -112,7 +108,6 @@ test("registration is idempotent and stores one workspace-local profile", async 
     await new Promise((resolve) => server.close(resolve));
   }
 });
-
 test("Owner workspace registration accepts bare Hermes workspace id and launches canonical Health workspace", async () => {
   const services = createTestServices();
   const server = createServer(services);

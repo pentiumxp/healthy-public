@@ -87,7 +87,6 @@
     }
     if (!list.children.length) appendButton(list, t.medicalEmpty, "--", () => {});
   }
-
   function renderIssueDetail(risk) {
     openDetail(labels.risk(risk));
     const detail = document.getElementById("detailView");
@@ -98,14 +97,12 @@
     appendSection(detail, t.relatedEvents, relatedEvents(risk).map(eventRow));
     if (/sleep|autonomic|recovery/i.test(risk.risk_key)) appendSection(detail, t.sleep, state.medical.sleep.map(sleepRow));
   }
-
   function renderMedicationList() {
     openDetail(t.medicationList);
     const detail = document.getElementById("detailView");
     const rows = state.medications.map(medicationRow);
     appendSection(detail, t.medicationList, rows.length ? rows : [emptyRow(t.noMedication)]);
   }
-
   function applyInitialPluginRoute() {
     if (!initialPluginRoute || state.pluginRouteApplied) return;
     state.pluginRouteApplied = true;
@@ -131,12 +128,10 @@
       if (firstRisk) renderIssueDetail(firstRisk);
     }
   }
-
   function relatedLabs(risk) {
     const tests = labTestsFor(risk).map((name) => name.toLowerCase());
     return state.medical.labs.filter((lab) => tests.some((name) => String(lab.test_name || "").toLowerCase().includes(name)));
   }
-
   function labTestsFor(risk) {
     const key = `${risk.risk_key} ${risk.label}`.toLowerCase();
     if (/alt|liver|fatty/.test(key)) return ["ALT", "AST", "GGT", "ALP", "Bilirubin"];
@@ -145,12 +140,10 @@
     if (/metabolic|ldl|apob|atherosclerosis|coronary|carotid|lad/.test(key)) return ["LDL-C", "ApoB", "Triglycerides", "HDL-C", "Total Cholesterol", "HbA1c", "Fasting Glucose"];
     return [];
   }
-
   function relatedFindings(risk) {
     const words = issueWords(risk);
     return state.medical.findings.filter((item) => words.some((word) => `${item.finding_key} ${item.title} ${item.evidence}`.toLowerCase().includes(word)));
   }
-
   function relatedEvents(risk) {
     const words = issueWords(risk);
     return state.medical.events.filter((item) => words.some((word) => `${item.event_type} ${item.title} ${item.summary}`.toLowerCase().includes(word))).slice(0, 8);
