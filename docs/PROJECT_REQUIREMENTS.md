@@ -20,13 +20,19 @@ Healthy is a personal health data application for structured storage, statistics
 - OCR/image/model extraction creates pending structured candidates, not confirmed facts.
 - The UI shows trend/statistics projections from service-generated data.
 - MCP tools let Hermes Mobile query summaries and write health data through explicit user context.
+- The native app shell may write authorized Apple Health / HealthKit data into
+  Healthy, including daily steps, calories, exercise minutes, distance,
+  workouts, sleep, body measurements, and vitals. These records are long-term
+  structured facts, not transient UI cache, and initial large sync must be
+  idempotent by workspace plus source/external id.
 
 ## Non-Goals
 
 - No medical diagnosis.
 - No automatic medication change advice.
 - No full nutrition food database in the first stage.
-- No sleep device integration in the first stage.
+- No direct medical device account integration beyond data provided by the
+  authorized native app shell.
 - No complete lab-report OCR pipeline in the first stage.
 - No business-code implementation during initialization.
 
@@ -36,6 +42,8 @@ Structured first-stage data:
 
 - User profile.
 - Current medications.
+- Apple Health daily summaries, workouts, sleep records, body measurements, and
+  vitals from the native app shell.
 - Strength sessions and sets.
 - Cardio sessions and zone splits.
 - Body measurements.
@@ -46,7 +54,7 @@ Structured first-stage data:
 Deferred data:
 
 - Detailed nutrition logs.
-- Sleep and recovery devices.
+- Direct sleep and recovery device account integrations outside Apple Health.
 - Lab results.
 - Symptom diary.
 - Medical-risk scoring.
@@ -87,4 +95,3 @@ Initialization is complete when:
 - `docs/PRODUCT_REQUIREMENTS.md` keeps durable product rules.
 - `docs/DATABASE.md` defines schema direction.
 - `docs/HARNESS_RULES.md` defines H1/H2/H3 validation policy.
-

@@ -65,7 +65,7 @@ p, span { color: var(--muted); font-size: 12px; }
   padding: 7px 10px;
   font-weight: 700;
 }
-.profile-grid, .body-grid {
+.profile-grid, .body-grid, .apple-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -109,7 +109,7 @@ strong {
   border-radius: 6px 6px 0 0;
   background: linear-gradient(180deg, #49a79a, #2f8f83);
 }
-.body-grid, .medical-list, .section-list, .set-table {
+.body-grid, .apple-grid, .medical-list, .section-list, .set-table {
   display: grid;
   gap: 8px;
   margin-top: 12px;

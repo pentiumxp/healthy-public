@@ -63,6 +63,11 @@ test("health HTML and theme module are available without launch", async () => {
     const strengthJs = await strengthResponse.text();
     assert.equal(strengthResponse.status, 200);
     assert.match(strengthJs, /HealthStrength/);
+
+    const appleResponse = await fetch(`${base}/health-apple.js`);
+    const appleJs = await appleResponse.text();
+    assert.equal(appleResponse.status, 200);
+    assert.match(appleJs, /HealthApple/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

@@ -11,11 +11,11 @@
     tools.openDetail(group.label);
     const detail = document.getElementById("detailView");
     tools.appendText(detail, summary(group));
-    tools.appendSection(detail, "\u6709\u6c27\u8bb0\u5f55", group.sessions.map((session) => sessionButton(session, tools)));
+    tools.appendSection(detail, "\u6709\u6c27\u8bb0\u5f55", group.sessions.map((session) => sessionButton(session, group, tools)));
   }
 
-  function renderDetail(session, tools) {
-    tools.openDetail(tools.labels.activity(session.activity_type));
+  function renderDetail(session, group, tools) {
+    tools.openDetail(tools.labels.activity(session.activity_type), { back: () => renderCategory(group, tools) });
     const detail = document.getElementById("detailView");
     tools.appendText(detail, session.notes || "");
     tools.appendSection(detail, "\u6709\u6c27\u660e\u7ec6", [
@@ -45,12 +45,12 @@
     return map.get(key);
   }
 
-  function sessionButton(session, tools) {
+  function sessionButton(session, group, tools) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "list-button";
     button.appendChild(row(date(session.started_at), sessionSummary(session), ""));
-    button.addEventListener("click", () => renderDetail(session, tools));
+    button.addEventListener("click", () => renderDetail(session, group, tools));
     return button;
   }
 

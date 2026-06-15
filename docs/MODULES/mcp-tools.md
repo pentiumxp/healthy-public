@@ -34,6 +34,16 @@ Profile 和用药：
 - `mcp_health_cardio_sessions_list`
 - `mcp_health_cardio_session_record`
 
+Apple Health 原生数据：
+
+- `mcp_health_apple_health_bulk_sync`
+- `mcp_health_apple_daily_summaries_list`
+- `mcp_health_apple_daily_summary_record`
+- `mcp_health_apple_daily_summaries_bulk_record`
+- `mcp_health_apple_workouts_list`
+- `mcp_health_apple_workout_record`
+- `mcp_health_apple_workouts_bulk_record`
+
 ## 运动分类归一化
 
 所有通过 MCP 从图片/OCR/模型解析写入的运动记录，都必须先归一到
@@ -53,6 +63,23 @@ Healthy 的 canonical catalog。
 - 服务端可接受已登记 alias，例如 `室内步行`、`跑步机步行`、
   `Technogym walk`，并归一为 `indoor_walk`。
 - 未命中 catalog/alias 时返回 `unsupported_activity_type`。
+
+Apple Health：
+
+- 原生 App 壳从 HealthKit 获取授权数据后，通过 Healthy HTTP API 或 MCP
+  bulk 工具写入 `apple_health_daily_summaries`、
+  `apple_health_workouts`、`apple_health_sleep_records` 和 body
+  measurement/vitals。
+- 初次同步近几年数据时应优先使用 `mcp_health_apple_health_bulk_sync`；
+  服务端按当前 MCP wrapper workspace 和 `source_type + external_id`
+  幂等更新，不回显完整大 payload。
+- Apple Health workout 只表示 HealthKit 层面的运动项目。深蹲、卧推、推肩等
+  专项力量动作仍使用 `mcp_health_strength_session_record` 和 canonical
+  strength catalog。
+- 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
+  来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
+- Tool arguments 不得包含 workspace、workspace_id、token、cookie、raw key
+  或 launch token；workspace 必须由 MCP wrapper / Gateway 当前上下文解析。
 
 模型调用顺序建议：
 

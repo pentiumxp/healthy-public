@@ -23,6 +23,11 @@ function createHealthClient(context) {
 
   return {
     addMedication: (medication) => request("POST", "/api/v1/profile/medications", medication),
+    bulkSyncAppleHealth: (payload) => request("POST", "/api/v1/apple-health/bulk-sync", payload),
+    createAppleDailySummary: (record) => request("POST", "/api/v1/apple-health/daily-summaries", record),
+    createAppleDailySummaries: (records) => request("POST", "/api/v1/apple-health/daily-summaries/bulk", records),
+    createAppleWorkout: (record) => request("POST", "/api/v1/apple-health/workouts", record),
+    createAppleWorkouts: (records) => request("POST", "/api/v1/apple-health/workouts/bulk", records),
     createCardioSession: (session) => request("POST", "/api/v1/cardio/sessions", session),
     createMedicalRecord: (kind, record) => request("POST", `/api/v1/medical/${kind}`, record),
     getDashboard: () => request("GET", "/api/v1/dashboard"),
@@ -30,6 +35,8 @@ function createHealthClient(context) {
     listMedicalRecords: (kind, query) => request("GET", `/api/v1/medical/${kind}`, null, query),
     listBodyMeasurements: (args) => request("GET", "/api/v1/body/measurements", null, { metric: args.metric }),
     listCardioSessions: () => request("GET", "/api/v1/cardio/sessions"),
+    listAppleDailySummaries: (args) => request("GET", "/api/v1/apple-health/daily-summaries", null, args),
+    listAppleWorkouts: (args) => request("GET", "/api/v1/apple-health/workouts", null, args),
     listMedications: () => request("GET", "/api/v1/profile/medications"),
     listStrengthSessions: () => request("GET", "/api/v1/strength/sessions"),
     recordBodyMeasurement: (measurement) => request("POST", "/api/v1/body/measurements", measurement),

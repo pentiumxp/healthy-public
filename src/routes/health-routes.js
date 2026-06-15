@@ -57,6 +57,46 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, { sessions: services.cardioService.listSessions({ workspaceRef }) });
     return true;
   }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/daily-summaries") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.recordDailySummary({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/bulk-sync") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.bulkSync({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/daily-summaries/bulk") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.recordDailySummaries({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/daily-summaries") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listDailySummaries({ workspaceRef, limit: url.searchParams.get("limit") }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/workouts") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.recordWorkout({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/workouts/bulk") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.recordWorkouts({ ...body, workspaceRef }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/workouts") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listWorkouts({ workspaceRef, limit: url.searchParams.get("limit"), workoutType: url.searchParams.get("workoutType") }));
+    return true;
+  }
   if (req.method === "POST" && url.pathname === "/api/v1/body/measurements") {
     const body = await readJson(req);
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });

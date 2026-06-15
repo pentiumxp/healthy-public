@@ -260,6 +260,109 @@ canonical key，不保存模型自由文本。首版系统 activity key：
 - 心率必须大于 0。
 - zone 枚举可从 `z1` 到 `z5`。
 
+## Apple Health 原生数据
+
+原生 App 壳可以从 HealthKit 读取授权后的长期健康数据，并通过
+Healthy API 批量写入。Apple Health 数据以可长期累积、可按 workspace
+隔离查询的结构化事实保存；主界面只展示简洁摘要，AI/MCP 可读取完整
+时间线。
+
+### apple_health_daily_summaries
+
+按 `source_type + external_id` 幂等更新，适合初次同步近几年数据。
+
+- `id`
+- `user_id`
+- `external_id`
+- `summary_date`
+- `step_count`
+- `active_energy_kcal`
+- `basal_energy_kcal`
+- `total_energy_kcal`
+- `exercise_minutes`
+- `stand_hours`
+- `walking_running_distance_m`
+- `flights_climbed`
+- `resting_heart_rate_bpm`
+- `average_heart_rate_bpm`
+- `source_type`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一；推荐 `external_id`
+  为 `apple_health_daily:<YYYY-MM-DD>` 或 HealthKit 稳定来源键。
+- 距离统一规范为 `m`，能量统一规范为 `kcal`。
+- 不保存 HealthKit 原始授权 token 或设备私密标识。
+
+### apple_health_workouts
+
+保存 Apple Health/HealthKit 层面的 workout 事件，例如步行、跑步、骑行、
+传统力量训练等。深蹲、卧推、推肩这类专项力量动作仍由 Healthy
+strength session / MCP strength 工具保存，不从 Apple Health workout
+自由文本里自动拆解。
+
+- `id`
+- `user_id`
+- `external_id`
+- `started_at`
+- `ended_at`
+- `apple_activity_type`
+- `normalized_activity_type`
+- `duration_seconds`
+- `distance_m`
+- `active_energy_kcal`
+- `total_energy_kcal`
+- `average_heart_rate_bpm`
+- `source_type`
+- `source_ref`
+- `metadata_json`
+- `notes`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一；优先使用 HealthKit UUID，
+  fallback 使用 `apple_health_workout:<endedAt-or-startedAt>`。
+- `apple_activity_type` 保留 HealthKit 原始 workout 类型。
+- `normalized_activity_type` 只映射到现有有氧展示 catalog：
+  `outdoor_walk`、`indoor_walk`、`run`、`cycling`、`elliptical`、
+  `rowing`、`other`。
+- 原生壳可使用统一 bulk API 同步多年的 daily summary、workout、
+  sleep、body measurement 和 vitals。
+
+### apple_health_sleep_records
+
+保存 Apple Health sleepAnalysis 聚合后的睡眠记录；不把首次同步的睡眠
+塞进临时 cardio 或 UI cache。
+
+- `id`
+- `user_id`
+- `external_id`
+- `sleep_start`
+- `sleep_end`
+- `total_sleep_minutes`
+- `rem_minutes`
+- `deep_sleep_minutes`
+- `core_minutes`
+- `awake_minutes`
+- `in_bed_minutes`
+- `hrv_ms`
+- `resting_heart_rate`
+- `source_type`
+- `metadata_json`
+- `notes`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一；推荐 HealthKit UUID 或
+  `apple_health_sleep:<sleepEnd-or-sleepStart>`。
+- 睡眠阶段单位统一为分钟。
+
 ## 身体数据与体成分
 
 ### body_measurements

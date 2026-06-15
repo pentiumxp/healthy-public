@@ -40,6 +40,9 @@ test("MCP wrapper lists mcp_health callable from workspace-local config", () => 
   assert.equal(parsed.tools[0].name, "mcp_health_records_get_summary");
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_strength_exercise_catalog_list"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_cardio_activity_catalog_list"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_apple_health_bulk_sync"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_apple_daily_summaries_bulk_record"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_apple_workouts_list"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_profile_update"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_strength_session_record"));
   assert.ok(parsed.tools.some((tool) => tool.name === "mcp_health_cardio_session_record"));
@@ -76,6 +79,8 @@ test("MCP wrapper can expose gateway-local tool names", () => {
   assert.ok(parsed.tools.some((tool) => tool.name === "lab_result_record"));
   assert.ok(parsed.tools.some((tool) => tool.name === "strength_exercise_catalog_list"));
   assert.ok(parsed.tools.some((tool) => tool.name === "cardio_activity_catalog_list"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "apple_health_bulk_sync"));
+  assert.ok(parsed.tools.some((tool) => tool.name === "apple_daily_summaries_bulk_record"));
   assert.ok(parsed.tools.some((tool) => tool.name === "risk_profile_record"));
   assert.ok(!parsed.tools.some((tool) => tool.name === "mcp_health_lab_result_record"));
   assert.doesNotMatch(result.stdout, /synthetic-key/);
@@ -134,6 +139,29 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     });
     assert.equal(cardio.activity_type, "indoor_walk");
 
+    const appleDaily = await mcpCall(workspace, "mcp_health_apple_daily_summaries_bulk_record", {
+      records: [
+        { summaryDate: "2026-06-14", stepCount: 8800, activeEnergyKcal: 430 },
+        { summaryDate: "2026-06-15", stepCount: 10200, activeEnergyKcal: 510 }
+      ]
+    });
+    assert.equal(appleDaily.count, 2);
+    const appleWorkout = await mcpCall(workspace, "mcp_health_apple_workout_record", {
+      startedAt: "2026-06-15T19:00:00+08:00",
+      appleActivityType: "outdoor walk",
+      durationSeconds: 1800
+    });
+    assert.equal(appleWorkout.apple_activity_type, "outdoor_walk");
+    const appleBulk = await mcpCall(workspace, "mcp_health_apple_health_bulk_sync", {
+      source: "apple_health_ios",
+      range: "last7",
+      client_sync_id: "ios-run-mcp",
+      sleep_records: [{ sleepStart: "2026-06-14T23:00:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 450 }],
+      vitals: [{ measuredAt: "2026-06-15T07:01:00+08:00", metric: "hrv_ms", value: 42 }]
+    });
+    assert.equal(appleBulk.counts.sleep_records, 1);
+    assert.equal(appleBulk.counts.vitals, 1);
+
     const body = await mcpCall(workspace, "mcp_health_body_measurement_record", {
       measuredAt: "2026-06-02T08:00:00+08:00",
       metric: "weight",
@@ -149,6 +177,7 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     const summary = await mcpCall(workspace, "mcp_health_records_get_summary", {});
     assert.equal(summary.workspace_id, "health:weixin_test_1");
     assert.equal(summary.summary.strength_sessions, 1);
+    assert.equal(summary.summary.apple_health.latestDaily.step_count, 10200);
     assert.equal(summary.summary.latest_body_metrics.weight.value, 80.5);
 
     const lab = await mcpCall(workspace, "mcp_health_lab_result_record", {

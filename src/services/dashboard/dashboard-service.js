@@ -1,4 +1,4 @@
-function createDashboardService({ profileService, strengthService, cardioService, bodyService, medicalRecordsService }) {
+function createDashboardService({ profileService, strengthService, cardioService, bodyService, medicalRecordsService, appleHealthService }) {
   function getDashboard(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const strengthSessions = strengthService.listSessions({ workspaceRef: user.workspace_ref });
@@ -16,6 +16,7 @@ function createDashboardService({ profileService, strengthService, cardioService
       medications: { activeCount: medications.length },
       strength: summarizeStrength(strengthSessions),
       cardio: summarizeCardio(cardioSessions),
+      appleHealth: appleHealthService ? summarizeAppleHealth(appleHealthService.getSnapshot({ workspaceRef: user.workspace_ref }), medicalRecordsService, user.workspace_ref) : {},
       body: summarizeBody(bodyMeasurements),
       medical: summarizeMedical(medicalRecordsService, user.workspace_ref),
       pendingReview: bodyMeasurements.filter((item) => item.confirmation_status === "pending").length
@@ -23,6 +24,17 @@ function createDashboardService({ profileService, strengthService, cardioService
   }
 
   return { getDashboard };
+}
+
+function summarizeAppleHealth(snapshot, medicalRecordsService, workspaceRef) {
+  const sleep = medicalRecordsService ? medicalRecordsService.list("recoverySleepRecords", { workspaceRef }).records : [];
+  return {
+    latestDaily: snapshot.latestDaily,
+    daily: snapshot.daily,
+    workouts: snapshot.workouts,
+    sleep: snapshot.sleep || sleep.slice(0, 8),
+    latestSleep: snapshot.latestSleep || sleep[0] || null
+  };
 }
 
 function summarizeCardio(sessions) {

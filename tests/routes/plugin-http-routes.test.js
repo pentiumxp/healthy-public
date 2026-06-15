@@ -196,7 +196,6 @@ test("plugin provisioning, launch, and dashboard preserve workspace isolation", 
       value: 80,
       unit: "kg"
     });
-
     const ownerDashboard = await api(base, "/api/v1/dashboard", "GET", "weixin_owner", ownerLaunch);
     const ownerDashboardLaunchOnly = await apiWithLaunchOnly(base, "/api/v1/dashboard", "GET", ownerLaunch);
     const testDashboard = await api(base, "/api/v1/dashboard", "GET", "weixin_test_1", testLaunch);

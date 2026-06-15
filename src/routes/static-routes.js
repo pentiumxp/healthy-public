@@ -18,6 +18,9 @@ function handleStaticRoute(req, res, url, services = {}) {
   if (url.pathname === "/health-cardio.js") {
     return serveStatic(res, publicPath("health-cardio.js"), "application/javascript; charset=utf-8");
   }
+  if (url.pathname === "/health-apple.js") {
+    return serveStatic(res, publicPath("health-apple.js"), "application/javascript; charset=utf-8");
+  }
   if (url.pathname === "/health-theme.js") {
     return serveStatic(res, publicPath("health-theme.js"), "application/javascript; charset=utf-8");
   }

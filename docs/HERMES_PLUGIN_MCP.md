@@ -92,6 +92,13 @@ mcp_health_strength_session_update
 mcp_health_cardio_activity_catalog_list
 mcp_health_cardio_sessions_list
 mcp_health_cardio_session_record
+mcp_health_apple_health_bulk_sync
+mcp_health_apple_daily_summaries_list
+mcp_health_apple_daily_summary_record
+mcp_health_apple_daily_summaries_bulk_record
+mcp_health_apple_workouts_list
+mcp_health_apple_workout_record
+mcp_health_apple_workouts_bulk_record
 mcp_health_body_measurements_list
 mcp_health_body_measurement_record
 mcp_health_body_measurement_update
@@ -128,6 +135,13 @@ Write rules:
 - The model must not use `mcp_health_clinical_event_record` for strength or
   cardio workouts. Clinical events are for exams, checkups, imaging,
   procedures, and similar medical timeline records.
+- Apple Health workout tools store HealthKit-level workout events only.
+  Deep strength movements such as squat, bench, and overhead press still use
+  strength session tools and the strength exercise catalog.
+- Native app initial synchronization should use the Apple Health bulk tools for
+  daily summaries, workouts, sleep, body measurements, and vitals. Bulk writes
+  are idempotent by current workspace plus `source_type + external_id` and
+  return bounded counts rather than echoing the whole payload.
 
 ## Workspace Binding
 
@@ -152,6 +166,8 @@ Read and summary:
 - `mcp_health_strength_sessions_list`
 - `mcp_health_cardio_activity_catalog_list`
 - `mcp_health_cardio_sessions_list`
+- `mcp_health_apple_daily_summaries_list`
+- `mcp_health_apple_workouts_list`
 - `mcp_health_body_measurements_list`
 - `mcp_health_metrics_trends`
 
@@ -162,6 +178,11 @@ Write and update:
 - `mcp_health_strength_session_record`
 - `mcp_health_strength_session_update`
 - `mcp_health_cardio_session_record`
+- `mcp_health_apple_health_bulk_sync`
+- `mcp_health_apple_daily_summary_record`
+- `mcp_health_apple_daily_summaries_bulk_record`
+- `mcp_health_apple_workout_record`
+- `mcp_health_apple_workouts_bulk_record`
 - `mcp_health_body_measurement_record`
 - `mcp_health_body_measurement_update`
 

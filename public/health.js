@@ -4,7 +4,7 @@
   const launch = params.get("launch") || "";
   const initialPluginRoute = String(params.get("pluginRoute") || params.get("route") || params.get("pluginActionId") || "").trim().toLowerCase();
   const labels = window.HealthLabels;
-  const state = { dashboard: null, strength: [], cardio: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false };
+  const state = { dashboard: null, strength: [], cardio: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null };
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
     noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55", noCardio: "\u6682\u65e0\u6709\u6c27\u8bb0\u5f55",
@@ -53,7 +53,7 @@
     return data;
   }
   function renderHome() {
-    state.view = "home";
+    state.view = "home"; state.detailBack = null;
     document.getElementById("homeView").classList.remove("hidden");
     document.getElementById("detailView").classList.add("hidden");
     document.getElementById("backButton").classList.add("hidden");
@@ -68,6 +68,7 @@
     setText("latestCardio", data.cardio?.latestSession ? fmtDate(data.cardio.latestSession.started_at) : t.noCardio);
     setText("cardioDistance", `${data.cardio?.totalDistanceKm || 0} km`);
     renderBars(data.strength.chart || []);
+    window.HealthApple.render(data.appleHealth || {});
     window.HealthStrength.renderList(state.strength, { labels, empty: t.noStrength, openDetail, appendText, appendSection });
     window.HealthCardio.renderList(state.cardio, { labels, empty: t.noCardio, openDetail, appendText, appendSection });
     renderMetric("weightMetric", "weightTrend", data.body.latest.weight);
@@ -153,8 +154,8 @@
     return String(`${risk.risk_key} ${risk.label}`).toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3);
   }
 
-  function openDetail(title) {
-    state.view = "detail";
+  function openDetail(title, options = {}) {
+    state.view = "detail"; state.detailBack = typeof options.back === "function" ? options.back : null;
     setText("pageTitle", title || t.app);
     document.getElementById("homeView").classList.add("hidden");
     const detail = document.getElementById("detailView");
@@ -164,7 +165,7 @@
     postNavigation(true);
   }
 
-  function goBack() { if (state.view === "detail") renderHome(); }
+  function goBack() { if (state.view !== "detail") return; const back = state.detailBack; state.detailBack = null; back ? back() : renderHome(); }
 
   function appendSection(parent, title, nodes) {
     const section = document.createElement("section");

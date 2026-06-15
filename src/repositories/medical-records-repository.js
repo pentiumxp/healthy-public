@@ -39,7 +39,9 @@ function createMedicalRecordsRepository(db, { clock } = {}) {
       clauses.push(`${key} = ?`);
       params.push(value);
     }
-    const order = table === "lab_results" ? "observed_at DESC, created_at DESC" : "created_at DESC";
+    const order = table === "lab_results"
+      ? "observed_at DESC, created_at DESC"
+      : table === "recovery_sleep_records" ? "sleep_start DESC, created_at DESC" : "created_at DESC";
     return db.prepare(`SELECT * FROM ${table} WHERE ${clauses.join(" AND ")} ORDER BY ${order}`).all(...params);
   }
 

@@ -11,11 +11,11 @@
     tools.openDetail(group.label);
     const detail = document.getElementById("detailView");
     tools.appendText(detail, summary(group));
-    tools.appendSection(detail, "\u8bad\u7ec3\u65e5\u671f", group.sessions.map((session) => sessionButton(session, tools)));
+    tools.appendSection(detail, "\u8bad\u7ec3\u65e5\u671f", group.sessions.map((session) => sessionButton(session, group, tools)));
   }
 
-  function renderSession(session, tools) {
-    tools.openDetail(date(session.started_at));
+  function renderSession(session, group, tools) {
+    tools.openDetail(date(session.started_at), { back: () => renderCategory(group, tools) });
     const detail = document.getElementById("detailView");
     const sets = session.sets || [];
     const volume = sets.reduce((sum, item) => sum + item.weight_kg * item.reps, 0);
@@ -62,14 +62,14 @@
     return group.sessionRefs.get(ref);
   }
 
-  function sessionButton(session, tools) {
+  function sessionButton(session, group, tools) {
     const sets = session.sets || [];
     const volume = sets.reduce((sum, item) => sum + item.weight_kg * item.reps, 0);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "list-button";
     button.appendChild(row(date(session.started_at), `${sets.length} \u7ec4 / ${Math.round(volume)} kg`, ""));
-    button.addEventListener("click", () => renderSession(session, tools));
+    button.addEventListener("click", () => renderSession(session, group, tools));
     return button;
   }
 

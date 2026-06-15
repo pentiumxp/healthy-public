@@ -6,6 +6,17 @@ const { normalizeLength, normalizeWeight } = require("../../utils/units");
 const BODY_METRICS = new Set([
   "weight",
   "body_fat_percentage",
+  "bmi",
+  "body_mass_index",
+  "blood_glucose",
+  "heart_rate",
+  "hrv_ms",
+  "lean_body_mass",
+  "mindfulness_minutes",
+  "oxygen_saturation",
+  "respiratory_rate",
+  "vo2_max",
+  "walking_average_heart_rate",
   "skeletal_muscle_mass",
   "waist_circumference",
   "hip_circumference",
@@ -28,7 +39,7 @@ function createBodyService({ profileService, bodyRepository }) {
   function normalizeMeasurement(input) {
     const measuredAt = requireIsoDateTime(input.measuredAt, "measuredAt");
     if (input.value == null) throw inputError("value is required");
-    if (input.metric === "weight" || input.metric === "skeletal_muscle_mass") {
+    if (input.metric === "weight" || input.metric === "skeletal_muscle_mass" || input.metric === "lean_body_mass") {
       return base(input, measuredAt, normalizeWeight(input.value, input.unit || "kg"), "kg");
     }
     if (input.metric.endsWith("_circumference")) {
@@ -54,9 +65,15 @@ function createBodyService({ profileService, bodyRepository }) {
   }
 
   function defaultUnit(metric) {
-    if (metric === "body_fat_percentage") return "percent";
-    if (metric.endsWith("_heart_rate")) return "bpm";
+    if (metric === "body_fat_percentage" || metric === "oxygen_saturation") return "percent";
+    if (metric === "heart_rate" || metric.endsWith("_heart_rate")) return "bpm";
     if (metric.endsWith("_blood_pressure")) return "mmHg";
+    if (metric === "blood_glucose") return "mg/dL";
+    if (metric === "bmi" || metric === "body_mass_index") return "kg/m2";
+    if (metric === "hrv_ms") return "ms";
+    if (metric === "mindfulness_minutes") return "min";
+    if (metric === "respiratory_rate") return "breaths/min";
+    if (metric === "vo2_max") return "ml/kg/min";
     return "unit";
   }
 

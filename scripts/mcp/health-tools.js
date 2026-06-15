@@ -66,6 +66,13 @@ const TOOLS = [
   tool("mcp_health_cardio_activity_catalog_list", "List supported cardio activity canonical keys and aliases. Use this before writing OCR/model-parsed workout data.", {}),
   tool("mcp_health_cardio_sessions_list", "List cardio/aerobic workout sessions for the configured workspace.", {}),
   tool("mcp_health_cardio_session_record", "Record a cardio/aerobic workout session. Use this for indoor_walk, elliptical, run, cycling, rowing, and outdoor_walk instead of clinical_event.", cardioProps(), ["startedAt", "activityType"]),
+  tool("mcp_health_apple_health_bulk_sync", "Bulk upsert Apple Health data from the native iOS shell. Workspace and credentials are resolved by the MCP wrapper, not by tool arguments.", appleHealthBulkProps()),
+  tool("mcp_health_apple_daily_summaries_list", "List long-term Apple Health daily summaries such as steps, energy, exercise minutes, distance, and heart rate.", { limit: numberProp() }),
+  tool("mcp_health_apple_daily_summary_record", "Record or update one Apple Health daily summary from the native app shell.", appleDailyProps(), ["summaryDate"]),
+  tool("mcp_health_apple_daily_summaries_bulk_record", "Bulk upsert Apple Health daily summaries for initial native app synchronization.", { records: { type: "array", minItems: 1, items: { type: "object", additionalProperties: true } } }, ["records"]),
+  tool("mcp_health_apple_workouts_list", "List Apple Health workouts from the native app shell. Strength exercise details still belong in strength session tools.", { limit: numberProp(), workoutType: stringProp() }),
+  tool("mcp_health_apple_workout_record", "Record or update one Apple Health workout from the native app shell.", appleWorkoutProps(), ["startedAt"]),
+  tool("mcp_health_apple_workouts_bulk_record", "Bulk upsert Apple Health workouts for initial native app synchronization.", { records: { type: "array", minItems: 1, items: { type: "object", additionalProperties: true } } }, ["records"]),
   tool("mcp_health_body_measurements_list", "List body measurements, optionally filtered by metric.", { metric: stringProp() }),
   tool("mcp_health_body_measurement_record", "Record one body measurement.", {
     measuredAt: stringProp(true),
@@ -143,6 +150,13 @@ async function dispatch(name, args, client) {
   if (name === "mcp_health_cardio_activity_catalog_list") return { records: cardioActivityCatalog() };
   if (name === "mcp_health_cardio_sessions_list") return await client.listCardioSessions();
   if (name === "mcp_health_cardio_session_record") return await client.createCardioSession(args);
+  if (name === "mcp_health_apple_health_bulk_sync") return await client.bulkSyncAppleHealth(args);
+  if (name === "mcp_health_apple_daily_summaries_list") return await client.listAppleDailySummaries(args);
+  if (name === "mcp_health_apple_daily_summary_record") return await client.createAppleDailySummary(args);
+  if (name === "mcp_health_apple_daily_summaries_bulk_record") return await client.createAppleDailySummaries(args);
+  if (name === "mcp_health_apple_workouts_list") return await client.listAppleWorkouts(args);
+  if (name === "mcp_health_apple_workout_record") return await client.createAppleWorkout(args);
+  if (name === "mcp_health_apple_workouts_bulk_record") return await client.createAppleWorkouts(args);
   if (name === "mcp_health_body_measurements_list") return await client.listBodyMeasurements(args);
   if (name === "mcp_health_body_measurement_record") return await client.recordBodyMeasurement(args);
   if (name === "mcp_health_body_measurement_update") {
@@ -191,6 +205,7 @@ function summarizeDashboard(data) {
     summary: {
       strength_sessions: data.strength && data.strength.sessionCount,
       weekly_volume_kg: data.strength && data.strength.weeklyVolumeKg,
+      apple_health: data.appleHealth,
       latest_body_metrics: data.body && data.body.latest,
       pending_review: data.pendingReview
     },
@@ -258,6 +273,35 @@ function labProps() {
 
 function cardioProps() {
   return { startedAt: stringProp(true), endedAt: stringProp(), activityType: stringProp(true), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceKm: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), elevationGainM: numberProp(), averageHeartRateBpm: numberProp(), averagePaceSecondsPerKm: numberProp(), perceivedExertion: numberProp(), sourceType: stringProp(), sourceDocumentId: stringProp(), notes: stringProp() };
+}
+
+function appleDailyProps() {
+  return { externalId: stringProp(), summaryDate: stringProp(true), stepCount: numberProp(), steps: numberProp(), activeEnergyKcal: numberProp(), basalEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), exerciseMinutes: numberProp(), standHours: numberProp(), walkingRunningDistanceM: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), flightsClimbed: numberProp(), restingHeartRateBpm: numberProp(), averageHeartRateBpm: numberProp(), sourceType: stringProp() };
+}
+
+function appleWorkoutProps() {
+  return { externalId: stringProp(), startedAt: stringProp(true), endedAt: stringProp(), appleActivityType: stringProp(), normalizedActivityType: stringProp(), workoutType: stringProp(), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), averageHeartRateBpm: numberProp(), sourceType: stringProp(), sourceRef: stringProp(), metadata: objectProp(), notes: stringProp() };
+}
+
+function appleHealthBulkProps() {
+  return {
+    source: stringProp(),
+    range: stringProp(),
+    client_sync_id: stringProp(),
+    clientSyncId: stringProp(),
+    daily_summaries: arrayObjectsProp(),
+    dailySummaries: arrayObjectsProp(),
+    workouts: arrayObjectsProp(),
+    sleep_records: arrayObjectsProp(),
+    sleepRecords: arrayObjectsProp(),
+    body_measurements: arrayObjectsProp(),
+    bodyMeasurements: arrayObjectsProp(),
+    vitals: arrayObjectsProp()
+  };
+}
+
+function arrayObjectsProp() {
+  return { type: "array", items: { type: "object", additionalProperties: true } };
 }
 
 function clinicalEventProps() {
