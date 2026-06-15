@@ -36,10 +36,18 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
     range: "last7",
     client_sync_id: "ios-run-1",
     sleep_records: [{ sleepStart: "2026-06-14T23:00:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 450, remMinutes: 80, deepSleepMinutes: 70 }],
-    body_measurements: [{ measuredAt: "2026-06-15T07:00:00+08:00", metric: "bmi", value: 24.1 }],
+    ecg_records: [{ recordedAt: "2026-06-15T07:10:00+08:00", classification: "sinus rhythm", averageHeartRateBpm: 62, samplingFrequencyHz: 512, voltageMeasurementCount: 15360 }],
+    body_measurements: [
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "weight", value: 72.5, unit: "kg" },
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "bodyFatPercentage", value: 18.2 },
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "leanBodyMass", value: 59.3, unit: "kg" },
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "waistCircumference", value: 82, unit: "cm" },
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "hipCircumference", value: 96, unit: "cm" },
+      { measuredAt: "2026-06-15T07:00:00+08:00", metric: "bmi", value: 24.1 }
+    ],
     vitals: [{ measuredAt: "2026-06-15T07:01:00+08:00", metric: "vo2_max", value: 41.5 }]
   });
-  assert.deepEqual(synced.counts, { daily_summaries: 0, workouts: 0, sleep_records: 1, body_measurements: 1, vitals: 1 });
+  assert.deepEqual(synced.counts, { daily_summaries: 0, workouts: 0, sleep_records: 1, ecg_records: 1, body_measurements: 6, vitals: 1 });
 
   const dashboard = services.dashboardService.getDashboard({ workspaceRef: "health:weixin_test_1" });
   assert.equal(dashboard.appleHealth.latestDaily.step_count, 11000);
@@ -49,6 +57,13 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.appleHealth.workouts[0].apple_activity_type, "outdoor_walk");
   assert.equal(dashboard.appleHealth.workouts[0].normalized_activity_type, "outdoor_walk");
   assert.equal(dashboard.appleHealth.latestSleep.total_sleep_minutes, 450);
+  assert.equal(dashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
+  assert.equal(dashboard.appleHealth.latestEcg.average_heart_rate_bpm, 62);
+  assert.equal(dashboard.body.latest.weight.value, 72.5);
+  assert.equal(dashboard.body.latest.body_fat_percentage.value, 18.2);
+  assert.equal(dashboard.body.latest.lean_body_mass.value, 59.3);
+  assert.equal(dashboard.body.latest.waist_circumference.value, 82);
+  assert.equal(dashboard.body.latest.hip_circumference.value, 96);
   assert.equal(dashboard.body.latest.bmi.value, 24.1);
   assert.equal(dashboard.body.latest.vo2_max.unit, "ml/kg/min");
 });

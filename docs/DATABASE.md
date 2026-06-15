@@ -331,7 +331,7 @@ strength session / MCP strength 工具保存，不从 Apple Health workout
   `outdoor_walk`、`indoor_walk`、`run`、`cycling`、`elliptical`、
   `rowing`、`other`。
 - 原生壳可使用统一 bulk API 同步多年的 daily summary、workout、
-  sleep、body measurement 和 vitals。
+  sleep、ECG、body measurement 和 vitals。
 
 ### apple_health_sleep_records
 
@@ -362,6 +362,38 @@ strength session / MCP strength 工具保存，不从 Apple Health workout
 - `user_id + source_type + external_id` 唯一；推荐 HealthKit UUID 或
   `apple_health_sleep:<sleepEnd-or-sleepStart>`。
 - 睡眠阶段单位统一为分钟。
+
+### apple_health_ecg_records
+
+保存 Apple Health electrocardiogram 的结果级记录。首版只保存可长期查询
+和 AI 总结所需的 bounded metadata，不保存完整电压采样数组。
+
+- `id`
+- `user_id`
+- `external_id`
+- `recorded_at`
+- `ended_at`
+- `classification`
+- `average_heart_rate_bpm`
+- `sampling_frequency_hz`
+- `voltage_measurement_count`
+- `symptoms_status`
+- `source_type`
+- `source_ref`
+- `metadata_json`
+- `notes`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一；推荐 HealthKit UUID 或
+  `apple_health_ecg:<recordedAt>`。
+- `classification` 保存规范化结果，例如 `sinus_rhythm`、
+  `atrial_fibrillation`、`inconclusive_low_heart_rate`、`inconclusive_high_heart_rate`、
+  `inconclusive_poor_reading` 或 `unrecognized`。
+- 不保存完整 ECG waveform/sample payload；如后续需要原始波形，应走单独
+  加密附件/来源文件存储设计。
 
 ## 身体数据与体成分
 

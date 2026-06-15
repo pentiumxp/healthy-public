@@ -139,9 +139,15 @@ Write rules:
   Deep strength movements such as squat, bench, and overhead press still use
   strength session tools and the strength exercise catalog.
 - Native app initial synchronization should use the Apple Health bulk tools for
-  daily summaries, workouts, sleep, body measurements, and vitals. Bulk writes
-  are idempotent by current workspace plus `source_type + external_id` and
-  return bounded counts rather than echoing the whole payload.
+  daily summaries, workouts, sleep, ECG, body measurements, and vitals. Bulk
+  writes are idempotent by current workspace plus `source_type + external_id`
+  and return bounded counts rather than echoing the whole payload.
+- ECG records use `ecg_records` / `ecgRecords` / `electrocardiograms` in the
+  bulk payload and persist result-level fields only, not complete waveform
+  samples.
+- Body composition records use `body_measurements` with canonical metrics such
+  as `weight`, `body_fat_percentage`, `lean_body_mass`,
+  `waist_circumference`, and `hip_circumference`.
 
 ## Workspace Binding
 

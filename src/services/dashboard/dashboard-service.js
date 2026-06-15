@@ -33,7 +33,9 @@ function summarizeAppleHealth(snapshot, medicalRecordsService, workspaceRef) {
     daily: snapshot.daily,
     workouts: snapshot.workouts,
     sleep: snapshot.sleep || sleep.slice(0, 8),
-    latestSleep: snapshot.latestSleep || sleep[0] || null
+    latestSleep: snapshot.latestSleep || sleep[0] || null,
+    ecg: snapshot.ecg || [],
+    latestEcg: snapshot.latestEcg || null
   };
 }
 

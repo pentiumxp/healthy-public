@@ -3,6 +3,14 @@ const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeCardioActivity } = require("../training/training-catalog");
 
+const METRIC_ALIASES = Object.freeze({
+  bodyfatpercentage: "body_fat_percentage", bodymassindex: "bmi", leanbodymass: "lean_body_mass",
+  waistcircumference: "waist_circumference", hipcircumference: "hip_circumference",
+  walkingaverageheartrate: "walking_average_heart_rate", heartrate: "heart_rate",
+  restingheartrate: "resting_heart_rate", oxygensaturation: "oxygen_saturation",
+  respiratoryrate: "respiratory_rate", vo2max: "vo2_max", bloodglucose: "blood_glucose"
+});
+
 function createAppleHealthService({ profileService, appleHealthRepository, bodyService }) {
   function bulkSync(input) {
     assertCleanText(input, "appleHealthBulkSync");
@@ -10,22 +18,13 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     const daily = appleHealthRepository.upsertDailySummaries(user.id, array(input.daily_summaries ?? input.dailySummaries).map(normalizeDaily));
     const workouts = appleHealthRepository.upsertWorkouts(user.id, array(input.workouts).map(normalizeWorkout));
     const sleep = appleHealthRepository.upsertSleepRecords(user.id, array(input.sleep_records ?? input.sleepRecords).map(normalizeSleep));
+    const ecg = appleHealthRepository.upsertEcgRecords(user.id, array(input.ecg_records ?? input.ecgRecords ?? input.electrocardiograms).map(normalizeEcg));
     const body = recordMeasurements(input.workspaceRef, array(input.body_measurements ?? input.bodyMeasurements), "body_measurements");
     const vitals = recordMeasurements(input.workspaceRef, array(input.vitals), "vitals");
-    return {
-      ok: true,
-      source: input.source || "apple_health_ios",
-      range: input.range || "",
-      client_sync_id: input.client_sync_id || input.clientSyncId || "",
-      counts: {
-        daily_summaries: daily.length,
-        workouts: workouts.length,
-        sleep_records: sleep.length,
-        body_measurements: body.length,
-        vitals: vitals.length
-      },
-      warnings: []
-    };
+    return { ok: true, source: input.source || "apple_health_ios", range: input.range || "", client_sync_id: input.client_sync_id || input.clientSyncId || "", counts: {
+      daily_summaries: daily.length, workouts: workouts.length, sleep_records: sleep.length,
+      ecg_records: ecg.length, body_measurements: body.length, vitals: vitals.length
+    }, warnings: [] };
   }
 
   function recordDailySummary(input) {
@@ -69,7 +68,8 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     const daily = appleHealthRepository.listDailySummaries(user.id, { limit: 14 });
     const workouts = appleHealthRepository.listWorkouts(user.id, { limit: 8 });
     const sleep = appleHealthRepository.listSleepRecords(user.id, { limit: 8 });
-    return { latestDaily: daily[0] || null, daily, workouts, latestSleep: sleep[0] || null, sleep };
+    const ecg = appleHealthRepository.listEcgRecords(user.id, { limit: 8 });
+    return { latestDaily: daily[0] || null, daily, workouts, latestSleep: sleep[0] || null, sleep, latestEcg: ecg[0] || null, ecg };
   }
 
   function recordMeasurements(workspaceRef, records, kind) {
@@ -159,10 +159,31 @@ function normalizeSleep(input) {
   };
 }
 
+function normalizeEcg(input) {
+  const recordedAt = requireIsoDateTime(input.recordedAt ?? input.recorded_at ?? input.startDate ?? input.start_date, "recordedAt");
+  const endedAt = input.endedAt || input.ended_at || input.endDate || input.end_date
+    ? requireIsoDateTime(input.endedAt ?? input.ended_at ?? input.endDate ?? input.end_date, "endedAt")
+    : null;
+  return {
+    externalId: externalId(input, `apple_health_ecg:${endedAt || recordedAt}`),
+    recordedAt,
+    endedAt,
+    classification: normalizeKey(input.classification ?? input.ecgClassification ?? input.ecg_classification),
+    averageHeartRateBpm: numberOrNull(input.averageHeartRateBpm ?? input.average_heart_rate_bpm),
+    samplingFrequencyHz: numberOrNull(input.samplingFrequencyHz ?? input.sampling_frequency_hz),
+    voltageMeasurementCount: integerOrNull(input.voltageMeasurementCount ?? input.voltage_measurement_count ?? input.sampleCount ?? input.sample_count),
+    symptomsStatus: normalizeKey(input.symptomsStatus ?? input.symptoms_status),
+    sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_ecg"),
+    sourceRef: input.sourceRef || input.source_ref,
+    metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision || input.device),
+    notes: input.notes
+  };
+}
+
 function normalizeMeasurement(input, kind) {
   return {
     measuredAt: requireIsoDateTime(input.measuredAt ?? input.measured_at ?? input.observedAt ?? input.observed_at, "measuredAt"),
-    metric: normalizeKey(input.metric),
+    metric: normalizeMetric(input.metric),
     value: numberOrNull(input.value),
     unit: input.unit,
     bodyPart: input.bodyPart ?? input.body_part,
@@ -180,9 +201,7 @@ function boundedMetadata(value) {
   return Object.fromEntries(Object.entries(value).slice(0, 16).map(([key, nested]) => [String(key).slice(0, 64), String(nested).slice(0, 512)]));
 }
 
-function bulkResult(saved) {
-  return { ok: true, count: saved.length, latest: saved[0] || null };
-}
+function bulkResult(saved) { return { ok: true, count: saved.length, latest: saved[0] || null }; }
 
 function distanceM(value, unit) {
   const number = numberOrNull(value);
@@ -194,14 +213,9 @@ function distanceM(value, unit) {
   return number;
 }
 
-function externalId(input, fallback) {
-  return String(input.externalId || input.external_id || input.importKey || input.import_key || fallback).trim();
-}
+function externalId(input, fallback) { return String(input.externalId || input.external_id || input.importKey || input.import_key || fallback).trim(); }
 
-function integerOrNull(value) {
-  const number = numberOrNull(value);
-  return number == null ? null : Math.round(number);
-}
+function integerOrNull(value) { const number = numberOrNull(value); return number == null ? null : Math.round(number); }
 
 function standHours(input) {
   const hours = numberOrNull(input.standHours ?? input.stand_hours);
@@ -221,9 +235,7 @@ function requiredRecords(input) {
   return list;
 }
 
-function array(value) {
-  return Array.isArray(value) ? value : [];
-}
+function array(value) { return Array.isArray(value) ? value : []; }
 
 function numberOrNull(value) {
   if (value == null || value === "") return null;
@@ -232,8 +244,12 @@ function numberOrNull(value) {
   return number;
 }
 
-function normalizeKey(value) {
-  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9+.-]+/g, "_").replace(/^_+|_+$/g, "");
+function normalizeKey(value) { return String(value || "").trim().toLowerCase().replace(/[^a-z0-9+.-]+/g, "_").replace(/^_+|_+$/g, ""); }
+
+function normalizeMetric(value) {
+  const raw = String(value || "").trim();
+  const compact = raw.replace(/[^a-z0-9]+/gi, "").toLowerCase();
+  return METRIC_ALIASES[compact] || normalizeKey(raw);
 }
 
 module.exports = { createAppleHealthService };

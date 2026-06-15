@@ -68,7 +68,8 @@ Apple Health：
 
 - 原生 App 壳从 HealthKit 获取授权数据后，通过 Healthy HTTP API 或 MCP
   bulk 工具写入 `apple_health_daily_summaries`、
-  `apple_health_workouts`、`apple_health_sleep_records` 和 body
+  `apple_health_workouts`、`apple_health_sleep_records`、
+  `apple_health_ecg_records` 和 body
   measurement/vitals。
 - 初次同步近几年数据时应优先使用 `mcp_health_apple_health_bulk_sync`；
   服务端按当前 MCP wrapper workspace 和 `source_type + external_id`
@@ -78,6 +79,14 @@ Apple Health：
   strength catalog。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
   来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
+- ECG 同步长期保存到 `apple_health_ecg_records`；bulk payload 字段为
+  `ecg_records`，也兼容 `ecgRecords` 和 `electrocardiograms`。首版不保存
+  完整电压波形数组。
+- 身体指标通过 bulk payload 的 `body_measurements` 写入，推荐 metric：
+  `weight`、`body_fat_percentage`、`lean_body_mass`、`waist_circumference`、
+  `hip_circumference`、`bmi`。Apple camelCase 名称如
+  `bodyFatPercentage`、`leanBodyMass`、`waistCircumference`、
+  `hipCircumference` 会归一到上述 canonical metric。
 - Tool arguments 不得包含 workspace、workspace_id、token、cookie、raw key
   或 launch token；workspace 必须由 MCP wrapper / Gateway 当前上下文解析。
 

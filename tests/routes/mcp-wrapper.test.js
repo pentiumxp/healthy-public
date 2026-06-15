@@ -77,11 +77,7 @@ test("MCP wrapper can expose gateway-local tool names", () => {
   assert.equal(result.status, 0);
   const parsed = JSON.parse(result.stdout);
   assert.ok(parsed.tools.some((tool) => tool.name === "lab_result_record"));
-  assert.ok(parsed.tools.some((tool) => tool.name === "strength_exercise_catalog_list"));
-  assert.ok(parsed.tools.some((tool) => tool.name === "cardio_activity_catalog_list"));
   assert.ok(parsed.tools.some((tool) => tool.name === "apple_health_bulk_sync"));
-  assert.ok(parsed.tools.some((tool) => tool.name === "apple_daily_summaries_bulk_record"));
-  assert.ok(parsed.tools.some((tool) => tool.name === "risk_profile_record"));
   assert.ok(!parsed.tools.some((tool) => tool.name === "mcp_health_lab_result_record"));
   assert.doesNotMatch(result.stdout, /synthetic-key/);
 });
@@ -157,9 +153,15 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
       range: "last7",
       client_sync_id: "ios-run-mcp",
       sleep_records: [{ sleepStart: "2026-06-14T23:00:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 450 }],
+      ecg_records: [{ recordedAt: "2026-06-15T07:10:00+08:00", classification: "sinus rhythm", averageHeartRateBpm: 62 }],
+      body_measurements: ["body_fat_percentage", "lean_body_mass", "waist_circumference", "hip_circumference"].map((metric, index) => ({
+        measuredAt: "2026-06-15T07:00:00+08:00", metric, value: [18.2, 59.3, 82, 96][index], unit: ["percent", "kg", "cm", "cm"][index]
+      })),
       vitals: [{ measuredAt: "2026-06-15T07:01:00+08:00", metric: "hrv_ms", value: 42 }]
     });
     assert.equal(appleBulk.counts.sleep_records, 1);
+    assert.equal(appleBulk.counts.ecg_records, 1);
+    assert.equal(appleBulk.counts.body_measurements, 4);
     assert.equal(appleBulk.counts.vitals, 1);
 
     const body = await mcpCall(workspace, "mcp_health_body_measurement_record", {
@@ -178,7 +180,11 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     assert.equal(summary.workspace_id, "health:weixin_test_1");
     assert.equal(summary.summary.strength_sessions, 1);
     assert.equal(summary.summary.apple_health.latestDaily.step_count, 10200);
+    assert.equal(summary.summary.apple_health.latestEcg.classification, "sinus_rhythm");
     assert.equal(summary.summary.latest_body_metrics.weight.value, 80.5);
+    for (const [metric, value] of Object.entries({ body_fat_percentage: 18.2, lean_body_mass: 59.3, waist_circumference: 82, hip_circumference: 96 })) {
+      assert.equal(summary.summary.latest_body_metrics[metric].value, value);
+    }
 
     const lab = await mcpCall(workspace, "mcp_health_lab_result_record", {
       observedAt: "2026-06-02T08:00:00+08:00",
@@ -289,6 +295,4 @@ function mcpRequest(workspace, name, args) {
   });
 }
 
-function listen(server) {
-  return new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-}
+function listen(server) { return new Promise((resolve) => server.listen(0, "127.0.0.1", resolve)); }

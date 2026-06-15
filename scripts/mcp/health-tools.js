@@ -294,6 +294,9 @@ function appleHealthBulkProps() {
     workouts: arrayObjectsProp(),
     sleep_records: arrayObjectsProp(),
     sleepRecords: arrayObjectsProp(),
+    ecg_records: arrayObjectsProp(),
+    ecgRecords: arrayObjectsProp(),
+    electrocardiograms: arrayObjectsProp(),
     body_measurements: arrayObjectsProp(),
     bodyMeasurements: arrayObjectsProp(),
     vitals: arrayObjectsProp()

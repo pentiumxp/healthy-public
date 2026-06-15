@@ -24,17 +24,20 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
         { summaryDate: "2026-06-15", steps: 10200, activeEnergyKcal: 510, exerciseMinutes: 58 }
       ],
       workouts: [{ startedAt: "2026-06-15T19:00:00+08:00", appleActivityType: "outdoor walk", durationSeconds: 1800 }],
-      sleep_records: [{ sleepStart: "2026-06-14T23:30:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 420 }]
+      sleep_records: [{ sleepStart: "2026-06-14T23:30:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 420 }],
+      ecg_records: [{ recordedAt: "2026-06-15T07:10:00+08:00", classification: "sinus rhythm", averageHeartRateBpm: 62 }]
     });
     assert.equal(synced.counts.daily_summaries, 2);
     assert.equal(synced.counts.workouts, 1);
     assert.equal(synced.counts.sleep_records, 1);
+    assert.equal(synced.counts.ecg_records, 1);
 
     const ownerDashboard = await api(base, "/api/v1/dashboard", "GET", ownerLaunch);
     const testDashboard = await api(base, "/api/v1/dashboard", "GET", testLaunch);
     assert.equal(ownerDashboard.appleHealth.latestDaily.step_count, 10200);
     assert.equal(ownerDashboard.appleHealth.workouts[0].apple_activity_type, "outdoor_walk");
     assert.equal(ownerDashboard.appleHealth.latestSleep.total_sleep_minutes, 420);
+    assert.equal(ownerDashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
     assert.equal(testDashboard.appleHealth.latestDaily, null);
   } finally {
     await new Promise((resolve) => server.close(resolve));
@@ -52,13 +55,16 @@ test("Apple Health bulk sync accepts Home AI proxy workspace context", async () 
       source: "apple_health_ios",
       range: "last7",
       client_sync_id: "ios-run-proxy",
-      daily_summaries: [{ summaryDate: "2026-06-16", steps: 1234 }]
+      daily_summaries: [{ summaryDate: "2026-06-16", steps: 1234 }],
+      electrocardiograms: [{ recordedAt: "2026-06-16T08:00:00+08:00", classification: "inconclusive other" }]
     });
     assert.equal(synced.counts.daily_summaries, 1);
+    assert.equal(synced.counts.ecg_records, 1);
 
     const dashboard = await apiWithWorkspaceKey(base, "/api/v1/dashboard", "GET", "weixin_test_1", "key-test");
     assert.equal(dashboard.appleHealth.latestDaily.summary_date, "2026-06-16");
     assert.equal(dashboard.appleHealth.latestDaily.step_count, 1234);
+    assert.equal(dashboard.appleHealth.latestEcg.classification, "inconclusive_other");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

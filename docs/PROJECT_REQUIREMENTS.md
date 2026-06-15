@@ -22,9 +22,9 @@ Healthy is a personal health data application for structured storage, statistics
 - MCP tools let Hermes Mobile query summaries and write health data through explicit user context.
 - The native app shell may write authorized Apple Health / HealthKit data into
   Healthy, including daily steps, calories, exercise minutes, distance,
-  workouts, sleep, body measurements, and vitals. These records are long-term
-  structured facts, not transient UI cache, and initial large sync must be
-  idempotent by workspace plus source/external id.
+  workouts, sleep, ECG, body composition, body measurements, and vitals. These
+  records are long-term structured facts, not transient UI cache, and initial
+  large sync must be idempotent by workspace plus source/external id.
 
 ## Non-Goals
 
@@ -42,8 +42,8 @@ Structured first-stage data:
 
 - User profile.
 - Current medications.
-- Apple Health daily summaries, workouts, sleep records, body measurements, and
-  vitals from the native app shell.
+- Apple Health daily summaries, workouts, sleep records, ECG records, body
+  measurements/body composition, and vitals from the native app shell.
 - Strength sessions and sets.
 - Cardio sessions and zone splits.
 - Body measurements.
