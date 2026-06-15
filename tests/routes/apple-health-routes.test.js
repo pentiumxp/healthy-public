@@ -41,6 +41,29 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
   }
 });
 
+test("Apple Health bulk sync accepts Home AI proxy workspace context", async () => {
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    await provision(base, "weixin_test_1", "key-test");
+    const synced = await apiWithWorkspaceKey(base, "/api/v1/apple-health/bulk-sync", "POST", "weixin_test_1", "key-test", {
+      source: "apple_health_ios",
+      range: "last7",
+      client_sync_id: "ios-run-proxy",
+      daily_summaries: [{ summaryDate: "2026-06-16", steps: 1234 }]
+    });
+    assert.equal(synced.counts.daily_summaries, 1);
+
+    const dashboard = await apiWithWorkspaceKey(base, "/api/v1/dashboard", "GET", "weixin_test_1", "key-test");
+    assert.equal(dashboard.appleHealth.latestDaily.summary_date, "2026-06-16");
+    assert.equal(dashboard.appleHealth.latestDaily.step_count, 1234);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 async function provision(base, hermesWorkspaceId, rawKey) {
   const response = await fetch(`${base}/api/v1/hermes/plugin/workspaces`, {
     method: "POST",
@@ -72,6 +95,22 @@ async function api(base, path, method, launch, body) {
   const response = await fetch(url, {
     method,
     headers: body ? { "content-type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  assert.equal(response.status, 200);
+  return response.json();
+}
+
+async function apiWithWorkspaceKey(base, path, method, workspaceId, rawKey, body) {
+  const url = new URL(`${base}${path}`);
+  url.searchParams.set("workspaceId", workspaceId);
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${rawKey}`,
+      "x-hermes-plugin-workspace-id": workspaceId,
+      ...(body ? { "content-type": "application/json" } : {})
+    },
     body: body ? JSON.stringify(body) : undefined
   });
   assert.equal(response.status, 200);

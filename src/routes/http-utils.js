@@ -23,16 +23,29 @@ function routeKey(req, url) {
   return `${req.method} ${url.pathname}`;
 }
 
-function workspaceFrom(url, body = {}) {
-  return body.workspace_id || body.workspaceRef || url.searchParams.get("workspace_id");
+function workspaceFrom(req, url, body = {}) {
+  return normalizeWorkspaceRef(
+    body.workspace_id
+      || body.workspaceId
+      || body.workspaceRef
+      || url.searchParams.get("workspace_id")
+      || url.searchParams.get("workspaceId")
+      || req.headers["x-hermes-plugin-workspace-id"]
+  );
 }
 
 function resolveAccess({ pluginService, req, url, body }) {
-  const workspaceRef = workspaceFrom(url, body);
+  const workspaceRef = workspaceFrom(req, url, body);
   const launch = req.headers["x-healthy-launch-token"] || url.searchParams.get("launch");
   if (launch) return pluginService.resolveLaunchToken(launch, workspaceRef).workspaceRef;
   pluginService.verifyWorkspaceKey(workspaceRef, bearerFrom(req.headers));
   return workspaceRef;
+}
+
+function normalizeWorkspaceRef(value) {
+  const workspaceId = String(value || "").trim();
+  if (!workspaceId) return "";
+  return workspaceId.startsWith("health:") ? workspaceId : `health:${workspaceId}`;
 }
 
 function serveStatic(res, filePath, contentType) {
@@ -47,4 +60,3 @@ function publicPath(fileName) {
 }
 
 module.exports = { bearerFrom, publicPath, readJson, resolveAccess, routeKey, sendError, sendJson, serveStatic };
-
