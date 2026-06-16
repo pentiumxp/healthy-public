@@ -73,6 +73,7 @@ const TOOLS = [
   tool("mcp_health_apple_workouts_list", "List Apple Health workouts from the native app shell. Strength exercise details still belong in strength session tools.", { limit: numberProp(), workoutType: stringProp() }),
   tool("mcp_health_apple_workout_record", "Record or update one Apple Health workout from the native app shell.", appleWorkoutProps(), ["startedAt"]),
   tool("mcp_health_apple_workouts_bulk_record", "Bulk upsert Apple Health workouts for initial native app synchronization.", { records: { type: "array", minItems: 1, items: { type: "object", additionalProperties: true } } }, ["records"]),
+  tool("mcp_health_apple_ecg_records_list", "List Apple Health ECG record metadata and classifications. Use record get for waveform samples.", { limit: numberProp() }),
   tool("mcp_health_apple_ecg_record_get", "Return one Apple Health ECG record with plot-ready voltage samples for AI analysis. Use recordId or externalId.", { recordId: stringProp(), externalId: stringProp() }),
   tool("mcp_health_body_measurements_list", "List body measurements, optionally filtered by metric.", { metric: stringProp() }),
   tool("mcp_health_body_measurement_record", "Record one body measurement.", {
@@ -158,6 +159,7 @@ async function dispatch(name, args, client) {
   if (name === "mcp_health_apple_workouts_list") return await client.listAppleWorkouts(args);
   if (name === "mcp_health_apple_workout_record") return await client.createAppleWorkout(args);
   if (name === "mcp_health_apple_workouts_bulk_record") return await client.createAppleWorkouts(args);
+  if (name === "mcp_health_apple_ecg_records_list") return await client.listAppleEcgRecords(args);
   if (name === "mcp_health_apple_ecg_record_get") return await client.getAppleEcgRecord(args);
   if (name === "mcp_health_body_measurements_list") return await client.listBodyMeasurements(args);
   if (name === "mcp_health_body_measurement_record") return await client.recordBodyMeasurement(args);

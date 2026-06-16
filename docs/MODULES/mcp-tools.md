@@ -43,6 +43,8 @@ Apple Health 原生数据：
 - `mcp_health_apple_workouts_list`
 - `mcp_health_apple_workout_record`
 - `mcp_health_apple_workouts_bulk_record`
+- `mcp_health_apple_ecg_records_list`
+- `mcp_health_apple_ecg_record_get`
 
 ## 运动分类归一化
 
@@ -88,10 +90,16 @@ Apple Health：
 - ECG 同步长期保存到 `apple_health_ecg_records` 和
   `apple_health_ecg_voltage_samples`；bulk payload 字段为 `ecg_records`，
   也兼容 `ecgRecords` 和 `electrocardiograms`。
+- Apple Watch ECG 分类会归一为 canonical key，例如中文 `窦性心律` ->
+  `sinus_rhythm`、`房颤` -> `atrial_fibrillation`、`不确定` ->
+  `inconclusive`、`高心率` -> `high_heart_rate`、`记录结果不佳` ->
+  `poor_recording`。
 - ECG waveform 写入支持两种格式：
   `voltageSamples: [{ externalId, sampleIndex, offsetMs, voltageMicrovolts }]`
   或紧凑数组 `voltagesMicrovolts: []`。如果有 `samplingFrequencyHz`，
   服务端可从 sample index 推导 offset。
+- `mcp_health_apple_ecg_records_list` 返回 ECG metadata 和分类列表，不回传
+  waveform 采样点，避免大 payload。
 - `mcp_health_apple_ecg_record_get` 可按 `recordId` 或 `externalId` 返回单条
   ECG 的 metadata 和 plot-ready `voltage_samples`，用于 AI 画图/分析。
 - 身体指标通过 bulk payload 的 `body_measurements` 写入，推荐 metric：

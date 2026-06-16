@@ -100,6 +100,23 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.body.latest.vo2_max.unit, "ml/kg/min");
 });
 
+test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists records", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    ecg_records: [
+      { externalId: "ecg-cn-1", recordedAt: "2025-08-22T09:20:07+08:00", classification: "房颤" },
+      { externalId: "ecg-cn-2", recordedAt: "2025-08-22T09:23:17+08:00", classification: "窦性心律" },
+      { externalId: "ecg-cn-3", recordedAt: "2025-08-22T09:37:06+08:00", classification: "记录结果不佳" }
+    ]
+  });
+
+  const records = services.appleHealthService.listEcgRecords({ workspaceRef: "health:weixin_test_1", limit: 10 }).records;
+  assert.deepEqual(records.map((record) => record.classification), ["poor_recording", "sinus_rhythm", "atrial_fibrillation"]);
+});
+
 test("Apple Health ECG waveform samples are stored and returned plot-ready", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

@@ -39,6 +39,7 @@ function createHealthClient(context) {
     listBodyMeasurements: (args) => request("GET", "/api/v1/body/measurements", null, { metric: args.metric }),
     listCardioSessions: () => request("GET", "/api/v1/cardio/sessions"),
     listAppleDailySummaries: (args) => request("GET", "/api/v1/apple-health/daily-summaries", null, args),
+    listAppleEcgRecords: (args) => request("GET", "/api/v1/apple-health/ecg-records", null, args),
     listAppleWorkouts: (args) => request("GET", "/api/v1/apple-health/workouts", null, args),
     listMedications: () => request("GET", "/api/v1/profile/medications"),
     listStrengthSessions: () => request("GET", "/api/v1/strength/sessions"),

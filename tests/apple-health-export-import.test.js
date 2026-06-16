@@ -23,6 +23,7 @@ test("Apple Health export importer stores daily observations and dedicated facts
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_daily_summaries").get().n, 1);
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_workouts").get().n, 1);
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_ecg_records").get().n, 1);
+  assert.equal(out.prepare("SELECT classification FROM apple_health_ecg_records").get().classification, "atrial_fibrillation");
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_observations").get().n, 2);
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_import_files").get().n, 2);
   assert.equal(out.prepare("SELECT COUNT(*) AS n FROM apple_health_workout_route_points").get().n, 2);
@@ -50,7 +51,7 @@ function createFixture(root) {
   ].join("\n"));
   write(root, "全量清洗分类数据/03_cardiorespiratory/42_ecg_manifest.csv", [
     "filename,record_date,classification,symptoms,software_version,device,sampling_rate_hz,sample_count,duration_sec,uv_min,uv_max,uv_avg",
-    "apple_health_export/electrocardiograms/ecg_fixture.csv,2026-06-15 07:10:00 +0800,Sinus Rhythm,,1,Watch,512,2,30,-1,1,0"
+    "apple_health_export/electrocardiograms/ecg_fixture.csv,2026-06-15 07:10:00 +0800,房颤,,1,Watch,512,2,30,-1,1,0"
   ].join("\n"));
   write(root, "全量清洗分类数据/00_record_type_dictionary.csv", [
     "category_id,category_name,record_type,metric_name,count,date_min,date_max,units,top_sources,example_values",

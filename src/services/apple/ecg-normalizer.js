@@ -1,3 +1,5 @@
+const { normalizeEcgClassification } = require("./ecg-classification");
+
 function createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime }) {
   function normalizeEcg(input) {
     const recordedAt = requireIsoDateTime(input.recordedAt ?? input.recorded_at ?? input.startDate ?? input.start_date, "recordedAt");
@@ -9,7 +11,7 @@ function createEcgNormalizer({ boundedMetadata, externalId, inputError, integerO
       externalId: externalId(input, `apple_health_ecg:${endedAt || recordedAt}`),
       recordedAt,
       endedAt,
-      classification: normalizeKey(input.classification ?? input.ecgClassification ?? input.ecg_classification),
+      classification: normalizeEcgClassification(input.classification ?? input.ecgClassification ?? input.ecg_classification, normalizeKey),
       averageHeartRateBpm: numberOrNull(input.averageHeartRateBpm ?? input.average_heart_rate_bpm),
       samplingFrequencyHz: numberOrNull(input.samplingFrequencyHz ?? input.sampling_frequency_hz),
       voltageMeasurementCount: integerOrNull(input.voltageMeasurementCount ?? input.voltage_measurement_count ?? input.sampleCount ?? input.sample_count ?? samples.length),

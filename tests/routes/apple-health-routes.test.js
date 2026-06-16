@@ -65,6 +65,10 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     const ecg = await api(base, "/api/v1/apple-health/ecg-records/by-external-id?externalId=route-ecg-1", "GET", ownerLaunch);
     assert.equal(ecg.record.sample_count, 2);
     assert.equal(ecg.record.voltage_samples[1].voltage_microvolts, 42);
+    const ecgList = await api(base, "/api/v1/apple-health/ecg-records?limit=10", "GET", ownerLaunch);
+    assert.equal(ecgList.records.length, 1);
+    assert.equal(ecgList.records[0].classification, "sinus_rhythm");
+    assert.equal(ecgList.records[0].voltage_samples, undefined);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

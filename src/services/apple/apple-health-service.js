@@ -74,6 +74,11 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return { ok: true, record };
   }
 
+  function listEcgRecords(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    return { records: appleHealthRepository.listEcgRecords(user.id, { limit: limit(input.limit, 30) }) };
+  }
+
   function getSnapshot(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const daily = appleHealthRepository.listDailySummaries(user.id, { limit: 14 });
@@ -99,7 +104,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return bodyService.recordMeasurement({ ...measurement, workspaceRef });
   }
 
-  return { bulkSync, getEcgRecord, getSnapshot, listDailySummaries, listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout };
+  return { bulkSync, getEcgRecord, getSnapshot, listDailySummaries, listEcgRecords, listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout };
 }
 
 function normalizeDaily(input) {

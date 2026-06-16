@@ -5,6 +5,7 @@ const crypto = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 const { DatabaseSync } = require("node:sqlite");
 const { applyMigrations } = require("../src/db/client");
+const { normalizeEcgClassification } = require("../src/services/apple/ecg-classification");
 
 const DEFAULT_SOURCE = "/Users/xuxin/HermesMobile/data/drive/users/owner/Hermes-徐欣/健身，健康/苹果健康";
 const DEFAULT_DB = "/Users/hermes-host/HermesMobile/plugins/healthy/data/healthy.sqlite";
@@ -172,7 +173,7 @@ function importEcg(context) {
     const recordedAt = parseAppleDate(row.record_date);
     if (!recordedAt || !row.filename) continue;
     const external = `apple_health_export_ecg:${row.filename}`;
-    recordStmt.run(id("ahe", external), context.userId, external, recordedAt, key(row.classification),
+    recordStmt.run(id("ahe", external), context.userId, external, recordedAt, normalizeEcgClassification(row.classification, key),
       null, num(row.sampling_rate_hz), int(row.sample_count), key(row.symptoms), row.filename,
       compactJson({ softwareVersion: row.software_version, device: row.device, uvMin: row.uv_min, uvMax: row.uv_max, uvAvg: row.uv_avg }),
       context.now, context.now);
