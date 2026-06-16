@@ -165,6 +165,38 @@ function createAppleHealthRepository(db, { clock } = {}) {
     return ecgRepository.listEcgRecords(userId, { limit });
   }
 
+  function listObservations(userId, { limit = 50, categoryId, metricName, recordType } = {}) {
+    const filters = [];
+    const params = [userId];
+    if (categoryId) { filters.push("category_id = ?"); params.push(categoryId); }
+    if (metricName) { filters.push("metric_name = ?"); params.push(metricName); }
+    if (recordType) { filters.push("record_type = ?"); params.push(recordType); }
+    params.push(limit);
+    return db.prepare(
+      `SELECT * FROM apple_health_observations
+       WHERE user_id = ?${filters.length ? ` AND ${filters.join(" AND ")}` : ""}
+       ORDER BY period DESC, updated_at DESC LIMIT ?`
+    ).all(...params);
+  }
+
+  function listImportFiles(userId, { limit = 50, fileKind } = {}) {
+    const filter = fileKind ? " AND file_kind = ?" : "";
+    const params = fileKind ? [userId, fileKind, limit] : [userId, limit];
+    return db.prepare(
+      `SELECT * FROM apple_health_import_files
+       WHERE user_id = ?${filter} ORDER BY file_path ASC LIMIT ?`
+    ).all(...params);
+  }
+
+  function listRoutePoints(userId, { limit = 1000, routeFile } = {}) {
+    const filter = routeFile ? " AND route_file = ?" : "";
+    const params = routeFile ? [userId, routeFile, limit] : [userId, limit];
+    return db.prepare(
+      `SELECT * FROM apple_health_workout_route_points
+       WHERE user_id = ?${filter} ORDER BY route_file ASC, point_index ASC LIMIT ?`
+    ).all(...params);
+  }
+
   function getEcgRecord(userId, query) { return ecgRepository.getEcgRecord(userId, query); }
 
   function upsertEcgRecords(userId, records) { return ecgRepository.upsertEcgRecords(userId, records); }
@@ -174,7 +206,12 @@ function createAppleHealthRepository(db, { clock } = {}) {
       .get(userId, sourceType, externalId);
   }
 
-  return { getEcgRecord, listDailySummaries, listEcgRecords, listSleepRecords, listWorkouts, upsertDailySummaries, upsertDailySummary, upsertEcgRecords, upsertSleepRecords, upsertWorkouts, upsertWorkout };
+  return {
+    getEcgRecord, listDailySummaries, listEcgRecords, listImportFiles,
+    listObservations, listRoutePoints, listSleepRecords, listWorkouts,
+    upsertDailySummaries, upsertDailySummary, upsertEcgRecords,
+    upsertSleepRecords, upsertWorkouts, upsertWorkout
+  };
 }
 
 module.exports = { createAppleHealthRepository };

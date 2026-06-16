@@ -3,6 +3,7 @@ const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeCardioActivity } = require("../training/training-catalog");
 const { createEcgNormalizer } = require("./ecg-normalizer");
+const { createAppleListService } = require("./apple-list-service");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
 const ecgNormalizer = createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime });
 const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
@@ -11,8 +12,8 @@ const METRIC_ALIASES = Object.freeze({
   waistcircumference: "waist_circumference", hipcircumference: "hip_circumference", walkingaverageheartrate: "walking_average_heart_rate",
   heartrate: "heart_rate", restingheartrate: "resting_heart_rate", oxygensaturation: "oxygen_saturation", respiratoryrate: "respiratory_rate", vo2max: "vo2_max", bloodglucose: "blood_glucose"
 });
-
 function createAppleHealthService({ profileService, appleHealthRepository, bodyService }) {
+  const lists = createAppleListService({ profileService, appleHealthRepository, limit });
   function bulkSync(input) {
     assertCleanText(input, "appleHealthBulkSync");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
@@ -74,11 +75,6 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return { ok: true, record };
   }
 
-  function listEcgRecords(input) {
-    const user = profileService.getUserByWorkspace(input.workspaceRef);
-    return { records: appleHealthRepository.listEcgRecords(user.id, { limit: limit(input.limit, 30) }) };
-  }
-
   function getSnapshot(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const daily = appleHealthRepository.listDailySummaries(user.id, { limit: 14 });
@@ -104,7 +100,13 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return bodyService.recordMeasurement({ ...measurement, workspaceRef });
   }
 
-  return { bulkSync, getEcgRecord, getSnapshot, listDailySummaries, listEcgRecords, listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout };
+  return {
+    bulkSync, getEcgRecord, getSnapshot, listDailySummaries,
+    listEcgRecords: lists.listEcgRecords, listImportFiles: lists.listImportFiles,
+    listObservations: lists.listObservations, listRoutePoints: lists.listRoutePoints,
+    listSleepRecords: lists.listSleepRecords,
+    listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout
+  };
 }
 
 function normalizeDaily(input) {

@@ -43,8 +43,12 @@ Apple Health 原生数据：
 - `mcp_health_apple_workouts_list`
 - `mcp_health_apple_workout_record`
 - `mcp_health_apple_workouts_bulk_record`
+- `mcp_health_apple_sleep_records_list`
 - `mcp_health_apple_ecg_records_list`
 - `mcp_health_apple_ecg_record_get`
+- `mcp_health_apple_observations_list`
+- `mcp_health_apple_import_files_list`
+- `mcp_health_apple_route_points_list`
 
 ## 运动分类归一化
 
@@ -87,6 +91,9 @@ Apple Health：
   需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
   来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
+- Apple Health 睡眠查询使用 `mcp_health_apple_sleep_records_list`。
+  `mcp_health_recovery_sleep_list` 只查 `recovery_sleep_records`，不会返回
+  HealthKit `sleepAnalysis` 同步数据。
 - ECG 同步长期保存到 `apple_health_ecg_records` 和
   `apple_health_ecg_voltage_samples`；bulk payload 字段为 `ecg_records`，
   也兼容 `ecgRecords` 和 `electrocardiograms`。
@@ -102,6 +109,12 @@ Apple Health：
   waveform 采样点，避免大 payload。
 - `mcp_health_apple_ecg_record_get` 可按 `recordId` 或 `externalId` 返回单条
   ECG 的 metadata 和 plot-ready `voltage_samples`，用于 AI 画图/分析。
+- `mcp_health_apple_observations_list` 返回清洗后的全量 daily/source-daily
+  observation 聚合，可按 `categoryId`、`metricName` 或 `recordType` 过滤。
+- `mcp_health_apple_import_files_list` 返回导出文件 provenance，例如
+  `ecg_csv`、`workout_route_gpx`、`workout_route_manifest`。
+- `mcp_health_apple_route_points_list` 返回 bounded workout route GPX 点位；
+  需要完整路线时应按 `routeFile` 分页/分批查询，不默认返回全量点位。
 - 身体指标通过 bulk payload 的 `body_measurements` 写入，推荐 metric：
   `weight`、`body_fat_percentage`、`lean_body_mass`、`waist_circumference`、
   `hip_circumference`、`bmi`。Apple camelCase 名称如

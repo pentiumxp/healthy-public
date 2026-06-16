@@ -117,6 +117,31 @@ test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists 
   assert.deepEqual(records.map((record) => record.classification), ["poor_recording", "sinus_rhythm", "atrial_fibrillation"]);
 });
 
+test("Apple Health export observations, files, and route points are listable", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+  const user = services.db.prepare("SELECT id FROM users WHERE workspace_ref = 'health:weixin_test_1'").get();
+  services.db.prepare(
+    `INSERT INTO apple_health_observations
+     (id, user_id, source_type, external_id, category_id, category_name, record_type, metric_name, period, granularity, numeric_avg, unit, created_at, updated_at)
+     VALUES ('obs1', ?, 'apple_health_export_daily_observation', 'obs1', '03_cardiorespiratory', 'Cardio', 'HKQuantityTypeIdentifierVO2Max', 'VO2Max', '2026-06-15', 'daily', 42.5, 'ml/kg/min', 'now', 'now')`
+  ).run(user.id);
+  services.db.prepare(
+    `INSERT INTO apple_health_import_files
+     (id, user_id, source_type, external_id, file_path, file_kind, byte_size, row_count, metadata_json, created_at, updated_at)
+     VALUES ('file1', ?, 'apple_health_export_file', 'file1', 'apple_health_export/electrocardiograms/ecg.csv', 'ecg_csv', 120, 15360, '{}', 'now', 'now')`
+  ).run(user.id);
+  services.db.prepare(
+    `INSERT INTO apple_health_workout_route_points
+     (id, user_id, source_type, external_id, route_file, point_index, recorded_at, latitude, longitude, elevation_m, metadata_json, created_at, updated_at)
+     VALUES ('route1', ?, 'apple_health_workout_route', 'route1', 'route.gpx', 0, '2026-06-15T00:00:00.000Z', 31.1, 121.1, 5.5, '{}', 'now', 'now')`
+  ).run(user.id);
+
+  assert.equal(services.appleHealthService.listObservations({ workspaceRef: "health:weixin_test_1", metricName: "VO2Max" }).records[0].numeric_avg, 42.5);
+  assert.equal(services.appleHealthService.listImportFiles({ workspaceRef: "health:weixin_test_1", fileKind: "ecg_csv" }).records[0].row_count, 15360);
+  assert.equal(services.appleHealthService.listRoutePoints({ workspaceRef: "health:weixin_test_1", routeFile: "route.gpx" }).records[0].latitude, 31.1);
+});
+
 test("Apple Health ECG waveform samples are stored and returned plot-ready", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

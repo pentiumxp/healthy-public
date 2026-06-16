@@ -14,6 +14,7 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     await provision(base, "weixin_test_1", "key-test");
     const ownerLaunch = await launch(base, "weixin_owner", "key-owner");
     const testLaunch = await launch(base, "weixin_test_1", "key-test");
+    seedAppleExportRows(services, "health:weixin_owner");
 
     const synced = await api(base, "/api/v1/apple-health/bulk-sync", "POST", ownerLaunch, {
       source: "apple_health_ios",
@@ -60,6 +61,9 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     assert.equal(ownerDashboard.appleHealth.workouts[0].heart_rate_summary.max_heart_rate_bpm, 138);
     assert.equal(ownerDashboard.appleHealth.workouts[0].heart_rate_samples.length, 2);
     assert.equal(ownerDashboard.appleHealth.latestSleep.total_sleep_minutes, 420);
+    const sleepList = await api(base, "/api/v1/apple-health/sleep-records?limit=5", "GET", ownerLaunch);
+    assert.equal(sleepList.records.length, 1);
+    assert.equal(sleepList.records[0].total_sleep_minutes, 420);
     assert.equal(ownerDashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
     assert.equal(testDashboard.appleHealth.latestDaily, null);
     const ecg = await api(base, "/api/v1/apple-health/ecg-records/by-external-id?externalId=route-ecg-1", "GET", ownerLaunch);
@@ -69,6 +73,9 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     assert.equal(ecgList.records.length, 1);
     assert.equal(ecgList.records[0].classification, "sinus_rhythm");
     assert.equal(ecgList.records[0].voltage_samples, undefined);
+    assert.equal((await api(base, "/api/v1/apple-health/observations?metricName=VO2Max", "GET", ownerLaunch)).records[0].numeric_avg, 42.5);
+    assert.equal((await api(base, "/api/v1/apple-health/import-files?fileKind=ecg_csv", "GET", ownerLaunch)).records[0].row_count, 15360);
+    assert.equal((await api(base, "/api/v1/apple-health/route-points?routeFile=route.gpx", "GET", ownerLaunch)).records[0].latitude, 31.1);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -113,6 +120,19 @@ async function provision(base, hermesWorkspaceId, rawKey) {
     })
   });
   assert.equal(response.status, 200);
+}
+
+function seedAppleExportRows(services, workspaceRef) {
+  const user = services.db.prepare("SELECT id FROM users WHERE workspace_ref = ?").get(workspaceRef);
+  services.db.prepare(`INSERT INTO apple_health_observations
+    (id, user_id, source_type, external_id, category_id, category_name, record_type, metric_name, period, granularity, numeric_avg, unit, created_at, updated_at)
+    VALUES ('route_obs1', ?, 'apple_health_export_daily_observation', 'route_obs1', '03_cardiorespiratory', 'Cardio', 'HKQuantityTypeIdentifierVO2Max', 'VO2Max', '2026-06-15', 'daily', 42.5, 'ml/kg/min', 'now', 'now')`).run(user.id);
+  services.db.prepare(`INSERT INTO apple_health_import_files
+    (id, user_id, source_type, external_id, file_path, file_kind, byte_size, row_count, metadata_json, created_at, updated_at)
+    VALUES ('route_file1', ?, 'apple_health_export_file', 'route_file1', 'apple_health_export/electrocardiograms/ecg.csv', 'ecg_csv', 120, 15360, '{}', 'now', 'now')`).run(user.id);
+  services.db.prepare(`INSERT INTO apple_health_workout_route_points
+    (id, user_id, source_type, external_id, route_file, point_index, recorded_at, latitude, longitude, elevation_m, metadata_json, created_at, updated_at)
+    VALUES ('route_point1', ?, 'apple_health_workout_route', 'route_point1', 'route.gpx', 0, '2026-06-15T00:00:00.000Z', 31.1, 121.1, 5.5, '{}', 'now', 'now')`).run(user.id);
 }
 
 async function launch(base, hermesWorkspaceId, rawKey) {

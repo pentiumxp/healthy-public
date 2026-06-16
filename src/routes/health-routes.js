@@ -97,9 +97,29 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, services.appleHealthService.listWorkouts({ workspaceRef, limit: url.searchParams.get("limit"), workoutType: url.searchParams.get("workoutType") }));
     return true;
   }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/sleep-records") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listSleepRecords({ workspaceRef, limit: url.searchParams.get("limit") }));
+    return true;
+  }
   if (req.method === "GET" && url.pathname === "/api/v1/apple-health/ecg-records") {
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
     sendJson(res, 200, services.appleHealthService.listEcgRecords({ workspaceRef, limit: url.searchParams.get("limit") }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/observations") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listObservations({ workspaceRef, limit: url.searchParams.get("limit"), categoryId: url.searchParams.get("categoryId"), metricName: url.searchParams.get("metricName"), recordType: url.searchParams.get("recordType") }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/import-files") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listImportFiles({ workspaceRef, limit: url.searchParams.get("limit"), fileKind: url.searchParams.get("fileKind") }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/route-points") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.listRoutePoints({ workspaceRef, limit: url.searchParams.get("limit"), routeFile: url.searchParams.get("routeFile") }));
     return true;
   }
   if (req.method === "GET" && url.pathname === "/api/v1/apple-health/ecg-records/by-external-id") {
