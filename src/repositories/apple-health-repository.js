@@ -1,7 +1,9 @@
 const { newId } = require("../utils/ids");
 const { nowIso } = require("../utils/time");
+const { createAppleHealthEcgRepository } = require("./apple-health-ecg-repository");
 const { createWorkoutHeartRateRepository } = require("./apple-health-workout-heart-rate-repository");
 function createAppleHealthRepository(db, { clock } = {}) {
+  const ecgRepository = createAppleHealthEcgRepository(db, { clock });
   const workoutHeartRate = createWorkoutHeartRateRepository(db, { clock });
   function upsertDailySummary(userId, record) {
     const now = nowIso(clock);
@@ -136,48 +138,6 @@ function createAppleHealthRepository(db, { clock } = {}) {
     return getByExternal("apple_health_sleep_records", userId, record.sourceType || "apple_health_sleep", record.externalId);
   }
 
-  function upsertEcgRecords(userId, records) {
-    const out = [];
-    db.exec("BEGIN");
-    try {
-      for (const record of records) out.push(upsertEcgRecord(userId, record));
-      db.exec("COMMIT");
-    } catch (error) {
-      db.exec("ROLLBACK");
-      throw error;
-    }
-    return out;
-  }
-
-  function upsertEcgRecord(userId, record) {
-    const now = nowIso(clock);
-    const id = newId("ahe");
-    db.prepare(
-      `INSERT INTO apple_health_ecg_records
-       (id, user_id, external_id, recorded_at, ended_at, classification,
-        average_heart_rate_bpm, sampling_frequency_hz, voltage_measurement_count,
-        symptoms_status, source_type, source_ref, metadata_json, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(user_id, source_type, external_id) DO UPDATE SET
-        recorded_at = excluded.recorded_at,
-        ended_at = excluded.ended_at,
-        classification = excluded.classification,
-        average_heart_rate_bpm = excluded.average_heart_rate_bpm,
-        sampling_frequency_hz = excluded.sampling_frequency_hz,
-        voltage_measurement_count = excluded.voltage_measurement_count,
-        symptoms_status = excluded.symptoms_status,
-        source_ref = excluded.source_ref,
-        metadata_json = excluded.metadata_json,
-        notes = excluded.notes,
-        updated_at = excluded.updated_at`
-    ).run(id, userId, record.externalId, record.recordedAt, record.endedAt,
-      record.classification, record.averageHeartRateBpm, record.samplingFrequencyHz,
-      record.voltageMeasurementCount, record.symptomsStatus,
-      record.sourceType || "apple_health_ecg", record.sourceRef || null,
-      JSON.stringify(record.metadata || {}), record.notes || null, now, now);
-    return getByExternal("apple_health_ecg_records", userId, record.sourceType || "apple_health_ecg", record.externalId);
-  }
-
   function listDailySummaries(userId, { limit = 14 } = {}) {
     return db.prepare(
       `SELECT * FROM apple_health_daily_summaries
@@ -202,18 +162,19 @@ function createAppleHealthRepository(db, { clock } = {}) {
   }
 
   function listEcgRecords(userId, { limit = 14 } = {}) {
-    return db.prepare(
-      `SELECT * FROM apple_health_ecg_records
-       WHERE user_id = ? ORDER BY recorded_at DESC LIMIT ?`
-    ).all(userId, limit);
+    return ecgRepository.listEcgRecords(userId, { limit });
   }
+
+  function getEcgRecord(userId, query) { return ecgRepository.getEcgRecord(userId, query); }
+
+  function upsertEcgRecords(userId, records) { return ecgRepository.upsertEcgRecords(userId, records); }
 
   function getByExternal(table, userId, sourceType, externalId) {
     return db.prepare(`SELECT * FROM ${table} WHERE user_id = ? AND source_type = ? AND external_id = ?`)
       .get(userId, sourceType, externalId);
   }
 
-  return { listDailySummaries, listEcgRecords, listSleepRecords, listWorkouts, upsertDailySummaries, upsertDailySummary, upsertEcgRecords, upsertSleepRecords, upsertWorkouts, upsertWorkout };
+  return { getEcgRecord, listDailySummaries, listEcgRecords, listSleepRecords, listWorkouts, upsertDailySummaries, upsertDailySummary, upsertEcgRecords, upsertSleepRecords, upsertWorkouts, upsertWorkout };
 }
 
 module.exports = { createAppleHealthRepository };

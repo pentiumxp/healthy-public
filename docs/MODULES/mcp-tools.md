@@ -85,9 +85,15 @@ Apple Health：
   需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
   来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
-- ECG 同步长期保存到 `apple_health_ecg_records`；bulk payload 字段为
-  `ecg_records`，也兼容 `ecgRecords` 和 `electrocardiograms`。首版不保存
-  完整电压波形数组。
+- ECG 同步长期保存到 `apple_health_ecg_records` 和
+  `apple_health_ecg_voltage_samples`；bulk payload 字段为 `ecg_records`，
+  也兼容 `ecgRecords` 和 `electrocardiograms`。
+- ECG waveform 写入支持两种格式：
+  `voltageSamples: [{ externalId, sampleIndex, offsetMs, voltageMicrovolts }]`
+  或紧凑数组 `voltagesMicrovolts: []`。如果有 `samplingFrequencyHz`，
+  服务端可从 sample index 推导 offset。
+- `mcp_health_apple_ecg_record_get` 可按 `recordId` 或 `externalId` 返回单条
+  ECG 的 metadata 和 plot-ready `voltage_samples`，用于 AI 画图/分析。
 - 身体指标通过 bulk payload 的 `body_measurements` 写入，推荐 metric：
   `weight`、`body_fat_percentage`、`lean_body_mass`、`waist_circumference`、
   `hip_circumference`、`bmi`。Apple camelCase 名称如

@@ -99,3 +99,36 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.body.latest.bmi.value, 24.1);
   assert.equal(dashboard.body.latest.vo2_max.unit, "ml/kg/min");
 });
+
+test("Apple Health ECG waveform samples are stored and returned plot-ready", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    electrocardiograms: [{
+      externalId: "ecg-plot-1",
+      recordedAt: "2026-06-15T07:10:00+08:00",
+      classification: "sinus rhythm",
+      samplingFrequencyHz: 512,
+      voltagesMicrovolts: [-12.5, 20, 35.5]
+    }]
+  });
+  services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    electrocardiograms: [{
+      externalId: "ecg-plot-1",
+      recordedAt: "2026-06-15T07:10:00+08:00",
+      classification: "sinus rhythm",
+      samplingFrequencyHz: 512,
+      voltageSamples: [{ sampleIndex: 0, offsetMs: 0, voltageMicrovolts: -10 }]
+    }]
+  });
+
+  const result = services.appleHealthService.getEcgRecord({ workspaceRef: "health:weixin_test_1", externalId: "ecg-plot-1" });
+  assert.equal(result.record.classification, "sinus_rhythm");
+  assert.equal(result.record.voltage_measurement_count, 1);
+  assert.deepEqual(result.record.voltage_samples.map((row) => ({ ...row })), [
+    { sample_index: 0, offset_ms: 0, voltage_microvolts: -10 }
+  ]);
+});

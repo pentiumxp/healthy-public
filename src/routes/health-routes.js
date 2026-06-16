@@ -97,6 +97,17 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, services.appleHealthService.listWorkouts({ workspaceRef, limit: url.searchParams.get("limit"), workoutType: url.searchParams.get("workoutType") }));
     return true;
   }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/ecg-records/by-external-id") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.getEcgRecord({ workspaceRef, externalId: url.searchParams.get("externalId") }));
+    return true;
+  }
+  if (req.method === "GET" && url.pathname.startsWith("/api/v1/apple-health/ecg-records/")) {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    const recordId = decodeURIComponent(url.pathname.split("/").pop());
+    sendJson(res, 200, services.appleHealthService.getEcgRecord({ workspaceRef, recordId }));
+    return true;
+  }
   if (req.method === "POST" && url.pathname === "/api/v1/body/measurements") {
     const body = await readJson(req);
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });

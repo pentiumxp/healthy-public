@@ -36,7 +36,17 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
         ]
       }],
       sleep_records: [{ sleepStart: "2026-06-14T23:30:00+08:00", sleepEnd: "2026-06-15T06:30:00+08:00", totalSleepMinutes: 420 }],
-      ecg_records: [{ recordedAt: "2026-06-15T07:10:00+08:00", classification: "sinus rhythm", averageHeartRateBpm: 62 }]
+      ecg_records: [{
+        externalId: "route-ecg-1",
+        recordedAt: "2026-06-15T07:10:00+08:00",
+        classification: "sinus rhythm",
+        averageHeartRateBpm: 62,
+        samplingFrequencyHz: 512,
+        voltageSamples: [
+          { sampleIndex: 0, offsetMs: 0, voltageMicrovolts: -31 },
+          { sampleIndex: 1, offsetMs: 1.95, voltageMicrovolts: 42 }
+        ]
+      }]
     });
     assert.equal(synced.counts.daily_summaries, 2);
     assert.equal(synced.counts.workouts, 1);
@@ -52,6 +62,9 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     assert.equal(ownerDashboard.appleHealth.latestSleep.total_sleep_minutes, 420);
     assert.equal(ownerDashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
     assert.equal(testDashboard.appleHealth.latestDaily, null);
+    const ecg = await api(base, "/api/v1/apple-health/ecg-records/by-external-id?externalId=route-ecg-1", "GET", ownerLaunch);
+    assert.equal(ecg.record.sample_count, 2);
+    assert.equal(ecg.record.voltage_samples[1].voltage_microvolts, 42);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

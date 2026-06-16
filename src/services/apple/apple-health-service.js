@@ -2,7 +2,9 @@ const { inputError } = require("../../utils/errors");
 const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeCardioActivity } = require("../training/training-catalog");
+const { createEcgNormalizer } = require("./ecg-normalizer");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
+const ecgNormalizer = createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime });
 const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
 const METRIC_ALIASES = Object.freeze({
   bodyfatpercentage: "body_fat_percentage", bodymassindex: "bmi", leanbodymass: "lean_body_mass",
@@ -62,6 +64,16 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return { records: appleHealthRepository.listWorkouts(user.id, { limit: limit(input.limit, 30), workoutType: input.workoutType || input.workout_type }) };
   }
 
+  function getEcgRecord(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    const recordId = input.recordId || input.record_id;
+    const externalId = input.externalId || input.external_id;
+    if (!recordId && !externalId) throw inputError("recordId or externalId is required");
+    const record = appleHealthRepository.getEcgRecord(user.id, { recordId, externalId });
+    if (!record) throw inputError("ecg_record_not_found");
+    return { ok: true, record };
+  }
+
   function getSnapshot(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     const daily = appleHealthRepository.listDailySummaries(user.id, { limit: 14 });
@@ -87,7 +99,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     return bodyService.recordMeasurement({ ...measurement, workspaceRef });
   }
 
-  return { bulkSync, getSnapshot, listDailySummaries, listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout };
+  return { bulkSync, getEcgRecord, getSnapshot, listDailySummaries, listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout };
 }
 
 function normalizeDaily(input) {
@@ -163,26 +175,7 @@ function normalizeSleep(input) {
   };
 }
 
-function normalizeEcg(input) {
-  const recordedAt = requireIsoDateTime(input.recordedAt ?? input.recorded_at ?? input.startDate ?? input.start_date, "recordedAt");
-  const endedAt = input.endedAt || input.ended_at || input.endDate || input.end_date
-    ? requireIsoDateTime(input.endedAt ?? input.ended_at ?? input.endDate ?? input.end_date, "endedAt")
-    : null;
-  return {
-    externalId: externalId(input, `apple_health_ecg:${endedAt || recordedAt}`),
-    recordedAt,
-    endedAt,
-    classification: normalizeKey(input.classification ?? input.ecgClassification ?? input.ecg_classification),
-    averageHeartRateBpm: numberOrNull(input.averageHeartRateBpm ?? input.average_heart_rate_bpm),
-    samplingFrequencyHz: numberOrNull(input.samplingFrequencyHz ?? input.sampling_frequency_hz),
-    voltageMeasurementCount: integerOrNull(input.voltageMeasurementCount ?? input.voltage_measurement_count ?? input.sampleCount ?? input.sample_count),
-    symptomsStatus: normalizeKey(input.symptomsStatus ?? input.symptoms_status),
-    sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_ecg"),
-    sourceRef: input.sourceRef || input.source_ref,
-    metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision || input.device),
-    notes: input.notes
-  };
-}
+function normalizeEcg(input) { return ecgNormalizer.normalizeEcg(input); }
 
 function normalizeMeasurement(input, kind) {
   return {

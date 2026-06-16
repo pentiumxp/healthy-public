@@ -30,6 +30,9 @@ function createHealthClient(context) {
     createAppleWorkouts: (records) => request("POST", "/api/v1/apple-health/workouts/bulk", records),
     createCardioSession: (session) => request("POST", "/api/v1/cardio/sessions", session),
     createMedicalRecord: (kind, record) => request("POST", `/api/v1/medical/${kind}`, record),
+    getAppleEcgRecord: (args) => args.recordId
+      ? request("GET", `/api/v1/apple-health/ecg-records/${encodeURIComponent(args.recordId)}`)
+      : request("GET", "/api/v1/apple-health/ecg-records/by-external-id", null, { externalId: args.externalId }),
     getDashboard: () => request("GET", "/api/v1/dashboard"),
     getProfile: () => request("GET", "/api/v1/profile"),
     listMedicalRecords: (kind, query) => request("GET", `/api/v1/medical/${kind}`, null, query),

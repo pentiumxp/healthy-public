@@ -415,8 +415,9 @@ iOS 壳按 `HKWorkout` 起止时间查询 `HeartRate` 后随 workout bulk payloa
 
 ### apple_health_ecg_records
 
-保存 Apple Health electrocardiogram 的结果级记录。首版只保存可长期查询
-和 AI 总结所需的 bounded metadata，不保存完整电压采样数组。
+保存 Apple Health electrocardiogram 的结果级记录。电压波形采样点不直接
+塞入本表，而是保存到 `apple_health_ecg_voltage_samples`，以支持心电图绘制
+和 AI 分析。
 
 - `id`
 - `user_id`
@@ -442,8 +443,35 @@ iOS 壳按 `HKWorkout` 起止时间查询 `HeartRate` 后随 workout bulk payloa
 - `classification` 保存规范化结果，例如 `sinus_rhythm`、
   `atrial_fibrillation`、`inconclusive_low_heart_rate`、`inconclusive_high_heart_rate`、
   `inconclusive_poor_reading` 或 `unrecognized`。
-- 不保存完整 ECG waveform/sample payload；如后续需要原始波形，应走单独
-  加密附件/来源文件存储设计。
+- bulk sync 写入后只返回 bounded summary，不回显完整 ECG waveform。
+
+### apple_health_ecg_voltage_samples
+
+保存 ECG 电压波形采样点，供服务接口返回 plot-ready 数据。
+
+- `id`
+- `user_id`
+- `ecg_id`
+- `source_type`
+- `external_id`
+- `sample_index`
+- `offset_ms`
+- `voltage_microvolts`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `ecg_id + sample_index` 唯一；`user_id + source_type + external_id` 也唯一。
+- 同一个 ECG 记录带 `voltageSamples` 或 `voltagesMicrovolts` 重传时，服务端会替换该
+  ECG 的旧样本点，避免绘图残留旧 waveform。
+- `voltageSamples` 元素字段为 `externalId`、`sampleIndex`、`offsetMs`、
+  `voltageMicrovolts`；也支持紧凑数组 `voltagesMicrovolts`。
+- 如果未传 `offsetMs` 且提供 `samplingFrequencyHz`，服务端按
+  `sampleIndex * 1000 / samplingFrequencyHz` 计算 offset。
+- 读取接口：
+  `GET /api/v1/apple-health/ecg-records/:recordId` 或
+  `GET /api/v1/apple-health/ecg-records/by-external-id?externalId=<id>`。
 
 ## Apple Health 清洗导出兼容记录
 
