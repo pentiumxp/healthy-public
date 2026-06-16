@@ -280,7 +280,7 @@ function appleDailyProps() {
 }
 
 function appleWorkoutProps() {
-  return { externalId: stringProp(), startedAt: stringProp(true), endedAt: stringProp(), appleActivityType: stringProp(), normalizedActivityType: stringProp(), workoutType: stringProp(), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), averageHeartRateBpm: numberProp(), sourceType: stringProp(), sourceRef: stringProp(), metadata: objectProp(), notes: stringProp() };
+  return { externalId: stringProp(), startedAt: stringProp(true), endedAt: stringProp(), appleActivityType: stringProp(), normalizedActivityType: stringProp(), workoutType: stringProp(), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), averageHeartRateBpm: numberProp(), minHeartRateBpm: numberProp(), maxHeartRateBpm: numberProp(), heartRateSummary: objectProp(), heartRateSamples: arrayObjectsProp(), sourceType: stringProp(), sourceRef: stringProp(), metadata: objectProp(), notes: stringProp() };
 }
 
 function appleHealthBulkProps() {

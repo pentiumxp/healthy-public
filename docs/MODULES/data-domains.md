@@ -68,8 +68,21 @@
 - 睡眠与恢复。
 - 化验/体检指标。
 - 症状和主观状态。
+- Apple Health mobility/gait、nutrition、hearing/environment、habits/events
+  等长期观察域。
 
 这些领域可以预留 schema 方向，但首版不应让范围膨胀。
+
+## Apple Health Export Compatibility
+
+Owner 工作区 Apple Health 清洗导出已确认包含 daily activity、body
+composition、cardiorespiratory/vitals、sleep、workout、ECG、mobility/gait、
+nutrition、hearing/environment 和 habits/events。当前 Healthy 已对 daily
+activity、workout、sleep、ECG、body/vitals 建立稳定同步入口。
+
+Workout 明细导出不包含 per-workout 心率样本；训练心率图的数据应由 iOS
+原生壳按 workout 时间窗读取 HealthKit `HeartRate` samples，并在
+`heartRateSamples` 中传入。
 
 ## Tests
 
@@ -80,4 +93,3 @@
 - 来源去重。
 - confirmed 数据保护。
 - service 统计结果可复现。
-

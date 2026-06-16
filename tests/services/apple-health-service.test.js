@@ -27,8 +27,32 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
     workspaceRef: "health:weixin_test_1",
     records: [
       { startedAt: "2026-06-15T08:00:00+08:00", appleActivityType: "traditional strength training", durationSeconds: 2700, activeEnergyKcal: 210 },
-      { startedAt: "2026-06-15T19:00:00+08:00", appleActivityType: "outdoor walk", durationSeconds: 1800, distanceKm: 2.4, activeEnergyKcal: 130 }
+      {
+        externalId: "workout-walk-1",
+        startedAt: "2026-06-15T19:00:00+08:00",
+        appleActivityType: "outdoor walk",
+        durationSeconds: 1800,
+        distanceKm: 2.4,
+        activeEnergyKcal: 130,
+        averageHeartRateBpm: 118,
+        heartRateSummary: { minHeartRateBpm: 92, maxHeartRateBpm: 141, zone2Seconds: 900 },
+        heartRateSamples: [
+          { externalId: "walk-1-hr-1", sampledAt: "2026-06-15T19:00:05+08:00", heartRateBpm: 92 },
+          { externalId: "walk-1-hr-2", sampledAt: "2026-06-15T19:10:00+08:00", heartRateBpm: 121 },
+          { externalId: "walk-1-hr-3", sampledAt: "2026-06-15T19:20:00+08:00", heartRateBpm: 141 }
+        ]
+      }
     ]
+  });
+  services.appleHealthService.recordWorkouts({
+    workspaceRef: "health:weixin_test_1",
+    records: [{
+      externalId: "workout-walk-1",
+      startedAt: "2026-06-15T19:00:00+08:00",
+      appleActivityType: "outdoor walk",
+      durationSeconds: 1800,
+      heartRateSamples: [{ externalId: "walk-1-hr-1", sampledAt: "2026-06-15T19:00:05+08:00", heartRateBpm: 93 }]
+    }]
   });
   const synced = services.appleHealthService.bulkSync({
     workspaceRef: "health:weixin_test_1",
@@ -56,6 +80,14 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.appleHealth.workouts.length, 2);
   assert.equal(dashboard.appleHealth.workouts[0].apple_activity_type, "outdoor_walk");
   assert.equal(dashboard.appleHealth.workouts[0].normalized_activity_type, "outdoor_walk");
+  assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.average_heart_rate_bpm, 118);
+  assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.min_heart_rate_bpm, 93);
+  assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.max_heart_rate_bpm, 93);
+  assert.deepEqual(dashboard.appleHealth.workouts[0].heart_rate_samples.map((row) => ({ ...row })), [
+    { sampled_at: "2026-06-15T11:00:05.000Z", heart_rate_bpm: 93 },
+    { sampled_at: "2026-06-15T11:10:00.000Z", heart_rate_bpm: 121 },
+    { sampled_at: "2026-06-15T11:20:00.000Z", heart_rate_bpm: 141 }
+  ]);
   assert.equal(dashboard.appleHealth.latestSleep.total_sleep_minutes, 450);
   assert.equal(dashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
   assert.equal(dashboard.appleHealth.latestEcg.average_heart_rate_bpm, 62);

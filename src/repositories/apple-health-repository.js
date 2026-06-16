@@ -1,7 +1,8 @@
 const { newId } = require("../utils/ids");
 const { nowIso } = require("../utils/time");
-
+const { createWorkoutHeartRateRepository } = require("./apple-health-workout-heart-rate-repository");
 function createAppleHealthRepository(db, { clock } = {}) {
+  const workoutHeartRate = createWorkoutHeartRateRepository(db, { clock });
   function upsertDailySummary(userId, record) {
     const now = nowIso(clock);
     const id = newId("ahd");
@@ -31,7 +32,6 @@ function createAppleHealthRepository(db, { clock } = {}) {
       record.sourceType || "apple_health", now, now);
     return getByExternal("apple_health_daily_summaries", userId, record.sourceType || "apple_health", record.externalId);
   }
-
   function upsertDailySummaries(userId, records) {
     const out = [];
     db.exec("BEGIN");
@@ -74,7 +74,9 @@ function createAppleHealthRepository(db, { clock } = {}) {
       record.distanceM, record.activeEnergyKcal, record.totalEnergyKcal,
       record.averageHeartRateBpm, record.sourceType || "apple_health_workout",
       record.sourceRef || null, JSON.stringify(record.metadata || {}), record.notes || null, now, now);
-    return getByExternal("apple_health_workouts", userId, record.sourceType || "apple_health_workout", record.externalId);
+    const workout = getByExternal("apple_health_workouts", userId, record.sourceType || "apple_health_workout", record.externalId);
+    workoutHeartRate.upsertWorkoutHeartRate(userId, workout, record);
+    return workoutHeartRate.attachWorkoutHeartRate(workout);
   }
 
   function upsertWorkouts(userId, records) {
@@ -189,7 +191,7 @@ function createAppleHealthRepository(db, { clock } = {}) {
     return db.prepare(
       `SELECT * FROM apple_health_workouts
        WHERE user_id = ?${filter} ORDER BY started_at DESC LIMIT ?`
-    ).all(...params);
+    ).all(...params).map(workoutHeartRate.attachWorkoutHeartRate);
   }
 
   function listSleepRecords(userId, { limit = 14 } = {}) {

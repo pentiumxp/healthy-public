@@ -2,13 +2,12 @@ const { inputError } = require("../../utils/errors");
 const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
 const { normalizeCardioActivity } = require("../training/training-catalog");
-
+const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
+const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
 const METRIC_ALIASES = Object.freeze({
   bodyfatpercentage: "body_fat_percentage", bodymassindex: "bmi", leanbodymass: "lean_body_mass",
-  waistcircumference: "waist_circumference", hipcircumference: "hip_circumference",
-  walkingaverageheartrate: "walking_average_heart_rate", heartrate: "heart_rate",
-  restingheartrate: "resting_heart_rate", oxygensaturation: "oxygen_saturation",
-  respiratoryrate: "respiratory_rate", vo2max: "vo2_max", bloodglucose: "blood_glucose"
+  waistcircumference: "waist_circumference", hipcircumference: "hip_circumference", walkingaverageheartrate: "walking_average_heart_rate",
+  heartrate: "heart_rate", restingheartrate: "resting_heart_rate", oxygensaturation: "oxygen_saturation", respiratoryrate: "respiratory_rate", vo2max: "vo2_max", bloodglucose: "blood_glucose"
 });
 
 function createAppleHealthService({ profileService, appleHealthRepository, bodyService }) {
@@ -131,12 +130,17 @@ function normalizeWorkout(input) {
     activeEnergyKcal: numberOrNull(input.activeEnergyKcal ?? input.active_energy_kcal),
     totalEnergyKcal: numberOrNull(input.totalEnergyKcal ?? input.total_energy_kcal),
     averageHeartRateBpm: numberOrNull(input.averageHeartRateBpm ?? input.average_heart_rate_bpm),
+    heartRateSummary: normalizeWorkoutHeartRateSummary(input),
+    heartRateSamples: array(input.heartRateSamples ?? input.heart_rate_samples).map((sample) => normalizeWorkoutHeartRateSample(sample, startedAt)),
     sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_workout"),
     sourceRef: input.sourceRef || input.source_ref,
     metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision),
     notes: input.notes
   };
 }
+
+function normalizeWorkoutHeartRateSummary(input) { return workoutHeartRate.normalizeWorkoutHeartRateSummary(input); }
+function normalizeWorkoutHeartRateSample(input, startedAt) { return workoutHeartRate.normalizeWorkoutHeartRateSample(input, startedAt); }
 
 function normalizeSleep(input) {
   const sleepStart = requireIsoDateTime(input.sleepStart ?? input.sleep_start, "sleepStart");

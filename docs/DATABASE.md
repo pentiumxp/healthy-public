@@ -333,6 +333,56 @@ strength session / MCP strength 工具保存，不从 Apple Health workout
 - 原生壳可使用统一 bulk API 同步多年的 daily summary、workout、
   sleep、ECG、body measurement 和 vitals。
 
+### apple_health_workout_heart_rate_summaries
+
+保存 Apple Health workout 期间心率的 bounded 汇总，供 workout 列表和详情
+展示平均/最低/最高心率及区间时间。
+
+- `id`
+- `user_id`
+- `workout_id`
+- `source_type`
+- `external_id`
+- `average_heart_rate_bpm`
+- `min_heart_rate_bpm`
+- `max_heart_rate_bpm`
+- `zone1_seconds`
+- `zone2_seconds`
+- `zone3_seconds`
+- `zone4_seconds`
+- `zone5_seconds`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `workout_id` 唯一；`user_id + source_type + external_id` 也唯一。
+- 缺失字段的重复同步不会把已有汇总值清空。
+
+### apple_health_workout_heart_rate_samples
+
+保存 workout 时间窗内的心率点，用于详情页心率图。Owner 的 Apple Health
+清洗导出中 workout 明细 CSV 没有 per-workout 心率样本；这些样本需要原生
+iOS 壳按 `HKWorkout` 起止时间查询 `HeartRate` 后随 workout bulk payload
+传入。
+
+- `id`
+- `user_id`
+- `workout_id`
+- `source_type`
+- `external_id`
+- `sampled_at`
+- `heart_rate_bpm`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一。
+- 推荐 `external_id` 使用 HealthKit heart-rate sample UUID；fallback
+  使用 workout 外部键、采样时间和数组位置，只用于避免插入冲突，不表达删除语义。
+- 列表投影最多回传 2000 个样本点，避免初次同步后 dashboard payload 过大。
+
 ### apple_health_sleep_records
 
 保存 Apple Health sleepAnalysis 聚合后的睡眠记录；不把首次同步的睡眠
@@ -394,6 +444,29 @@ strength session / MCP strength 工具保存，不从 Apple Health workout
   `inconclusive_poor_reading` 或 `unrecognized`。
 - 不保存完整 ECG waveform/sample payload；如后续需要原始波形，应走单独
   加密附件/来源文件存储设计。
+
+## Apple Health 清洗导出兼容记录
+
+已抽样核对 Owner 工作区
+`健身，健康/苹果健康/全量清洗分类数据`。当前 Healthy 首批长期表直接覆盖：
+
+- `01_body_composition`: `BodyMass`、`BodyFatPercentage`、`LeanBodyMass`、
+  `BodyMassIndex`、`WaistCircumference`。
+- `02_activity_energy`: `StepCount`、`ActiveEnergyBurned`、
+  `BasalEnergyBurned`、`DistanceWalkingRunning`、`AppleExerciseTime`、
+  `AppleStandTime`、`FlightsClimbed`。
+- `03_cardiorespiratory`: `HeartRate`、`RestingHeartRate`、
+  `WalkingHeartRateAverage`、`HeartRateVariabilitySDNN`、`BloodPressure*`、
+  `OxygenSaturation`、`RespiratoryRate`、`VO2Max`。
+- `04_sleep_recovery`: `SleepAnalysis`。
+- `05_workouts_routes`: workout 明细字段 `workout_type` / `type`、起止时间、
+  duration、distance、energy、source metadata。
+- `42_ecg_manifest`: ECG 记录日期、classification、sampling rate、sample count、
+  duration、device/software bounded metadata。
+
+暂未建专表的清洗导出域包括 mobility/gait、nutrition、hearing/environment
+和 habits/events。后续应以通用 `health_observations` 或按域专表承接，
+而不是塞进 workout 或 body measurement。
 
 ## 身体数据与体成分
 

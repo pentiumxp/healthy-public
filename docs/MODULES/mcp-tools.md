@@ -77,6 +77,12 @@ Apple Health：
 - Apple Health workout 只表示 HealthKit 层面的运动项目。深蹲、卧推、推肩等
   专项力量动作仍使用 `mcp_health_strength_session_record` 和 canonical
   strength catalog。
+- Workout 支持 `averageHeartRateBpm`、`minHeartRateBpm`、`maxHeartRateBpm`、
+  `heartRateSummary` 和 `heartRateSamples`。`heartRateSamples` 元素字段为
+  `externalId`、`sampledAt`、`heartRateBpm`；原生壳应优先传 HealthKit
+  sample UUID 作为 `externalId`，用于幂等覆盖。
+- Owner 的 Apple Health 清洗导出 workout CSV 没有训练期间心率曲线；训练心率图
+  需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
   来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
 - ECG 同步长期保存到 `apple_health_ecg_records`；bulk payload 字段为
@@ -87,6 +93,9 @@ Apple Health：
   `hip_circumference`、`bmi`。Apple camelCase 名称如
   `bodyFatPercentage`、`leanBodyMass`、`waistCircumference`、
   `hipCircumference` 会归一到上述 canonical metric。
+- 已确认 Apple Health 清洗导出还包含 mobility/gait、nutrition、
+  hearing/environment 和 habits/events；这些域暂不落入 body/workout，
+  后续应通过通用 observation 或专域表扩展。
 - Tool arguments 不得包含 workspace、workspace_id、token、cookie、raw key
   或 launch token；workspace 必须由 MCP wrapper / Gateway 当前上下文解析。
 
