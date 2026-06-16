@@ -100,8 +100,12 @@ Apple Health：
   `bodyFatPercentage`、`leanBodyMass`、`waistCircumference`、
   `hipCircumference` 会归一到上述 canonical metric。
 - 已确认 Apple Health 清洗导出还包含 mobility/gait、nutrition、
-  hearing/environment 和 habits/events；这些域暂不落入 body/workout，
-  后续应通过通用 observation 或专域表扩展。
+  hearing/environment 和 habits/events；这些域不落入 body/workout，
+  清洗导入时通过 `apple_health_observations` 长期保存，后续可再按使用频率
+  拆出专域 MCP/API。
+- Apple Health 导出包 provenance 保存到 `apple_health_import_files`；ECG
+  waveform 和 workout route GPX 点位分别保存到采样点专表，不在工具返回中
+  默认回显大 payload。
 - Tool arguments 不得包含 workspace、workspace_id、token、cookie、raw key
   或 launch token；workspace 必须由 MCP wrapper / Gateway 当前上下文解析。
 

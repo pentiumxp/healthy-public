@@ -383,6 +383,33 @@ iOS 壳按 `HKWorkout` 起止时间查询 `HeartRate` 后随 workout bulk payloa
   使用 workout 外部键、采样时间和数组位置，只用于避免插入冲突，不表达删除语义。
 - 列表投影最多回传 2000 个样本点，避免初次同步后 dashboard payload 过大。
 
+### apple_health_workout_route_points
+
+保存 Apple Health 导出包里的 workout route GPX trackpoint，用于长期保留
+轨迹原始序列。Healthy 当前主界面不展示路线图；该表用于后续审计、导出或
+AI 工具按需读取。
+
+- `id`
+- `user_id`
+- `source_type`
+- `external_id`
+- `route_file`
+- `point_index`
+- `recorded_at`
+- `latitude`
+- `longitude`
+- `elevation_m`
+- `metadata_json`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一。
+- `external_id` 使用 route 文件名和点位序号，例如
+  `apple_health_export_route:<route-file>:<point-index>`。
+- 经纬度保存为 decimal degrees，海拔保存为米。
+
 ### apple_health_sleep_records
 
 保存 Apple Health sleepAnalysis 聚合后的睡眠记录；不把首次同步的睡眠
@@ -488,13 +515,70 @@ iOS 壳按 `HKWorkout` 起止时间查询 `HeartRate` 后随 workout bulk payloa
   `OxygenSaturation`、`RespiratoryRate`、`VO2Max`。
 - `04_sleep_recovery`: `SleepAnalysis`。
 - `05_workouts_routes`: workout 明细字段 `workout_type` / `type`、起止时间、
-  duration、distance、energy、source metadata。
+  duration、distance、energy、source metadata；route GPX 点位保存到
+  `apple_health_workout_route_points`。
 - `42_ecg_manifest`: ECG 记录日期、classification、sampling rate、sample count、
   duration、device/software bounded metadata。
 
-暂未建专表的清洗导出域包括 mobility/gait、nutrition、hearing/environment
-和 habits/events。后续应以通用 `health_observations` 或按域专表承接，
-而不是塞进 workout 或 body measurement。
+### apple_health_observations
+
+保存 Apple Health 清洗导出的全量 daily/source-daily 聚合记录。该表用于承接
+暂未建专表的 mobility/gait、nutrition、hearing/environment、habits/events
+等长期观察域，也保存已建专表域的聚合事实，便于后续 AI 查询完整时间线。
+
+- `id`
+- `user_id`
+- `source_type`
+- `external_id`
+- `category_id`
+- `category_name`
+- `record_type`
+- `metric_name`
+- `source_name`
+- `period`
+- `granularity`
+- `count`
+- `numeric_sum`
+- `numeric_avg`
+- `numeric_min`
+- `numeric_max`
+- `duration_min`
+- `non_numeric_count`
+- `unit`
+- `metadata_json`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一。
+- `source_type` 区分 `apple_health_export_daily_observation` 和
+  `apple_health_export_source_daily_observation`。
+- 单位来自清洗导出的 record type dictionary；不把这些通用观察强行塞入
+  body、workout 或 sleep 专表。
+
+### apple_health_import_files
+
+保存 Apple Health 导出包成员和清洗 route manifest 的文件级 provenance。
+
+- `id`
+- `user_id`
+- `source_type`
+- `external_id`
+- `file_path`
+- `file_kind`
+- `byte_size`
+- `row_count`
+- `sha256`
+- `metadata_json`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id + source_type + external_id` 唯一。
+- `file_kind` 示例：`ecg_csv`、`workout_route_gpx`、`zip_member`、
+  `workout_route_manifest`。
 
 ## 身体数据与体成分
 
