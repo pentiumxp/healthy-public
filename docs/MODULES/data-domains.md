@@ -88,6 +88,10 @@ ECG 需要能绘制心电图时，原生壳应同步 ECG waveform：优先传
 `voltageSamples`，也可传 `voltagesMicrovolts`。Healthy 会长期保存采样点，
 并通过 ECG record 读取接口返回 plot-ready `voltage_samples`。
 
+UI 边界：Apple Health 数据在 Healthy 主界面只显示同步状态，不重复展示步数、
+消耗热量、睡眠或 Apple workout 详情；这些具体指标属于 Apple Health 原生界面。
+Healthy 主界面优先展示服药、体检/医疗重点、来源发现和专项力量训练等互补数据。
+
 ## Tests
 
 首批测试：

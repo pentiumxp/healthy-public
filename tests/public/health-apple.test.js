@@ -6,8 +6,8 @@ const vm = require("node:vm");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "..", "public");
 
-test("Apple Health dashboard module renders long-term native metrics", () => {
-  const ids = ["appleHealthDate", "appleSteps", "appleEnergy", "appleExercise", "appleDistance", "appleSleep", "appleWorkout"];
+test("Apple Health dashboard module renders sync status without duplicating native metrics", () => {
+  const ids = ["appleHealthDate", "appleSyncStatus", "appleSyncDetail"];
   const elements = new Map(ids.map((id) => [id, { textContent: "" }]));
   const sandbox = {
     window: {},
@@ -21,11 +21,7 @@ test("Apple Health dashboard module renders long-term native metrics", () => {
     workouts: [{ apple_activity_type: "outdoor_walk", duration_seconds: 1800 }]
   });
 
-  assert.equal(elements.get("appleHealthDate").textContent, "HealthKit 2026-06-15");
-  assert.equal(elements.get("appleSteps").textContent, "10,200");
-  assert.equal(elements.get("appleEnergy").textContent, "510 kcal");
-  assert.equal(elements.get("appleExercise").textContent, "58 min");
-  assert.equal(elements.get("appleDistance").textContent, "7.4 km");
-  assert.equal(elements.get("appleSleep").textContent, "7.3 h");
-  assert.equal(elements.get("appleWorkout").textContent, "Outdoor Walk 30 min");
+  assert.equal(elements.get("appleHealthDate").textContent, "数据源状态");
+  assert.equal(elements.get("appleSyncStatus").textContent, "已同步");
+  assert.match(elements.get("appleSyncDetail").textContent, /AI/);
 });

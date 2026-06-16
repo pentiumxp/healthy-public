@@ -1,37 +1,10 @@
 (function () {
   function render(data) {
     const latest = data.latestDaily || {};
-    const workout = (data.workouts || [])[0] || {};
-    const sleep = data.latestSleep || {};
-    set("appleHealthDate", latest.summary_date ? `HealthKit ${latest.summary_date}` : "\u6682\u65e0\u539f\u751f\u5065\u5eb7\u6570\u636e");
-    set("appleSteps", latest.step_count == null ? "--" : number(latest.step_count));
-    set("appleEnergy", latest.active_energy_kcal == null ? "--" : `${round(latest.active_energy_kcal)} kcal`);
-    set("appleExercise", latest.exercise_minutes == null ? "--" : `${round(latest.exercise_minutes)} min`);
-    set("appleDistance", latest.walking_running_distance_m == null ? "--" : `${round(latishKm(latest.walking_running_distance_m))} km`);
-    set("appleSleep", sleep.total_sleep_minutes == null ? "--" : `${round(sleep.total_sleep_minutes / 60)} h`);
-    const workoutType = workout.apple_activity_type || workout.normalized_activity_type;
-    set("appleWorkout", workoutType ? `${label(workoutType)} ${minutes(workout.duration_seconds)}`.trim() : "--");
-  }
-
-  function label(value) {
-    const text = String(value || "").replace(/_/g, " ");
-    return text.replace(/\b\w/g, (letter) => letter.toUpperCase());
-  }
-
-  function minutes(seconds) {
-    return seconds ? `${Math.round(seconds / 60)} min` : "";
-  }
-
-  function number(value) {
-    return Math.round(value).toLocaleString("en-US");
-  }
-
-  function round(value) {
-    return Math.round(value * 10) / 10;
-  }
-
-  function latishKm(value) {
-    return Number(value || 0) / 1000;
+    const synced = Boolean(latest.summary_date || (data.workouts || []).length || data.latestSleep || data.latestEcg);
+    set("appleHealthDate", synced ? "\u6570\u636e\u6e90\u72b6\u6001" : "\u6682\u65e0\u539f\u751f\u5065\u5eb7\u6570\u636e");
+    set("appleSyncStatus", synced ? "\u5df2\u540c\u6b65" : "\u672a\u540c\u6b65");
+    set("appleSyncDetail", synced ? "Apple Health \u6570\u636e\u5df2\u53ef\u4f9b AI \u5206\u6790\u4f7f\u7528\uff0c\u5177\u4f53\u6307\u6807\u8bf7\u5728 Apple Health \u67e5\u770b" : "\u6388\u6743\u540e\u4ec5\u4f5c\u4e3a AI \u53ef\u7528\u6570\u636e\u5e95\u5ea7");
   }
 
   function set(id, text) {

@@ -21,7 +21,9 @@ Current first slice:
 - `public/health.css`
 - `public/health.js`
 
-The embedded UI reads `/api/v1/dashboard` through workspace-bound launch context and shows Profile, strength training, body metrics, and pending import candidate count. It does not read from the database directly and does not show a duplicate Hermes shell.
+The embedded UI reads `/api/v1/dashboard` through workspace-bound launch context and shows Profile, medications, strength training, body metrics, medical timeline priorities, and pending import candidate count. It does not read from the database directly and does not show a duplicate Hermes shell.
+
+Apple Health data is not duplicated as a full dashboard in Healthy. The UI shows only whether Apple Health has synced and leaves concrete native metrics such as steps, calories, sleep, and Apple workout summaries to Apple Health itself. Healthy stores those records for AI analysis and focuses the visible interface on complementary data: medications, medical timeline priorities, source-backed findings, and strength training.
 
 ## UI Boundary
 

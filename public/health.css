@@ -65,7 +65,7 @@ p, span { color: var(--muted); font-size: 12px; }
   padding: 7px 10px;
   font-weight: 700;
 }
-.profile-grid, .body-grid, .apple-grid {
+.profile-grid, .body-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
@@ -109,7 +109,7 @@ strong {
   border-radius: 6px 6px 0 0;
   background: linear-gradient(180deg, #49a79a, #2f8f83);
 }
-.body-grid, .apple-grid, .medical-list, .section-list, .set-table {
+.body-grid, .medical-list, .section-list, .set-table {
   display: grid;
   gap: 8px;
   margin-top: 12px;
@@ -127,6 +127,16 @@ strong {
   border-radius: 999px;
   background: linear-gradient(90deg, #c7ddd8, #2f8f83);
 }
+.apple-status {
+  min-height: 58px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--list-bg);
+  padding: 11px 12px;
+}
+.apple-status strong { margin: 0 0 6px; font-size: 16px; color: var(--accent); }
+.apple-status span { display: block; line-height: 1.35; }
 .medical-item, .detail-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
