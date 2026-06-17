@@ -5,7 +5,7 @@
 ## 文档层级
 
 - `docs/ARCHITECTURE.md` - 系统架构、模块分层、MCP/HTTP/UI 调用路径。
-- `docs/ARCHITECTURE_BOUNDARY.md` - Service-first 架构边界、入口文件职责、单文件预算。
+- `docs/ARCHITECTURE_BOUNDARY.md` - Service-first 架构边界、入口文件职责、结构化架构门禁。
 - `docs/PROJECT_REQUIREMENTS.md` - 项目需求分析、角色、场景、非目标、数据和隐私边界。
 - `docs/PRODUCT_REQUIREMENTS.md` - 长期产品规则、首版范围、医学边界。
 - `docs/IMPLEMENTATION_PLAN.md` - 阶段划分、交付物、迁移、验证和回滚策略。

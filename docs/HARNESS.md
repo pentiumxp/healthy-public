@@ -8,7 +8,7 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 
 相关文档：
 
-- `docs/ARCHITECTURE_BOUNDARY.md`: Service-first 边界和文件预算。
+- `docs/ARCHITECTURE_BOUNDARY.md`: Service-first 边界和结构化架构门禁。
 - `docs/HARNESS_RULES.md`: H1/H2/H3 分级规则。
 - `docs/TEST_MATRIX.md`: 按变更类型选择验证范围。
 - `docs/IMPLEMENTATION_NOTES/harness-required-matrix.md`: H1/H2/H3 harness 分类。
@@ -28,19 +28,12 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 
 这些逻辑必须进入 `domain/*/*.service.*` 或明确命名的 provider。
 
-## 文件大小约束
+## 结构化架构门禁
 
-首版建议阈值：
+Harness 不使用物理行数作为通过/失败门禁。行数只能作为 review 时的诊断
+信息，不能触发 CI 失败，也不能成为压缩空行、注释或可读 helper 的理由。
 
-- 入口文件：不超过 120 行。
-- 路由文件：不超过 180 行。
-- MCP tool handler 文件：不超过 160 行。
-- service 文件：不超过 260 行。
-- repository 文件：不超过 220 行。
-- UI component 文件：不超过 220 行。
-- 单个测试文件：不超过 300 行。
-
-超过阈值时，优先拆分：
+超过可维护边界时，优先按职责拆分：
 
 - schema/validator
 - pure helper
@@ -49,7 +42,8 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 - route group
 - test fixture
 
-阈值是上限，不是目标。
+判断是否需要拆分，应看职责是否混杂、依赖方向是否倒置、业务状态是否回流到
+入口/路由/UI，以及是否缺少 focused harness，而不是看物理行数。
 
 ## 模块边界检查
 
@@ -101,7 +95,7 @@ Harness 用来约束 Healthy 的实现方式，防止后续代码退化成入口
 
 ### Architecture tests
 
-自动扫描文件大小和 import 边界。
+自动扫描 import 边界、稳定导出和禁止职责回流。
 
 建议脚本：
 
@@ -111,11 +105,13 @@ scripts/check-architecture.ts
 
 检查项：
 
-- 文件行数阈值。
 - 禁止 import 规则。
 - MCP 工具必须调用 service。
 - route 文件必须调用 service。
 - service 文件必须有对应测试。
+- app/entrypoint 只能做启动和依赖组合。
+- route/MCP/UI 不得重新拥有健康业务状态机、单位规范化、Profile 策略、
+  import 采纳策略、趋势计算或敏感解释策略。
 
 ## 数据安全约束
 

@@ -51,19 +51,27 @@ MCP handler、HTTP route 和 UI component 只能做：
 
 模块之间通过 service 接口协作。repository 不跨模块直接读写其他模块表，除非通过明确的事务服务编排。
 
-## 文件预算
+## Architecture Gates
 
-首版上限：
+Architecture gates measure ownership and module boundaries, not physical line
+counts. Do not use line-count ceilings as pass/fail gates because they can be
+gamed by deleting blank lines or compressing readable helpers into dense
+single-line code.
 
-- app/入口文件：120 行。
-- MCP tool handler：160 行。
-- HTTP route：180 行。
-- service：260 行。
-- repository：220 行。
-- UI component：220 行。
-- 单个测试文件：300 行。
+Healthy architecture checks should assert:
 
-超过预算时必须拆分。预算是上限，不是目标。
+- entrypoints and app files stay as process/composition glue;
+- routes and MCP handlers delegate health behavior to named services/providers;
+- health state machines, normalization, profile policy, import adoption, trend
+  calculation, and sensitive interpretation stay out of routes and UI;
+- repositories own persistence details and do not import HTTP, MCP, UI, or
+  Hermes adapters;
+- services expose stable factories and have focused tests;
+- frontend modules stay split by UI ownership instead of moving back into one
+  monolithic file.
+
+Physical line counts may be collected as diagnostic metadata during review, but
+must not fail CI or define whether a refactor succeeded.
 
 ## Import 边界
 
@@ -83,7 +91,6 @@ MCP handler、HTTP route 和 UI component 只能做：
 - 是否有明确 owning service/provider。
 - service 是否有 focused tests。
 - MCP/HTTP/UI 是否只是边界适配。
-- 文件大小是否低于预算。
+- 是否保持明确的结构边界，且没有为了满足行数而压缩可读性。
 - 数据来源、置信度、确认状态是否被保存。
 - 测试和文档是否同步更新。
-

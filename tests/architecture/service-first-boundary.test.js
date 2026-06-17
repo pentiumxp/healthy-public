@@ -12,20 +12,29 @@ test("routes do not import database client or repositories", () => {
   }
 });
 
-test("application files stay within first-version line budgets", () => {
-  const budgets = [
-    ["src/app", 120],
-    ["src/routes", 180],
-    ["src/services", 260],
-    ["src/repositories", 220],
-    ["public", 260],
-    ["tests", 300]
+test("application boundary keeps explicit service and route ownership", () => {
+  assertFileContains("src/app/services.js", "function createServices");
+  assertFileContains("src/app/http-server.js", "function createServer");
+  assertFileContains("src/routes/health-routes.js", "handleHealthRoute");
+  assertFileContains("src/routes/medical-routes.js", "handleMedicalRoute");
+  assertFileContains("src/routes/plugin-routes.js", "handlePluginRoute");
+  assertFileContains("src/services/users/profile-service.js", "function createProfileService");
+  assertFileContains("src/services/training/strength-service.js", "function createStrengthService");
+  assertFileContains("src/services/training/cardio-service.js", "function createCardioService");
+  assertFileContains("src/services/body/body-service.js", "function createBodyService");
+  assertFileContains("src/services/apple/apple-health-service.js", "function createAppleHealthService");
+});
+
+test("entrypoint and routes do not regain domain persistence ownership", () => {
+  const boundaryFiles = [
+    "src/app/http-server.js",
+    "src/routes/health-routes.js",
+    "src/routes/medical-routes.js",
+    "src/routes/plugin-routes.js"
   ];
-  for (const [dir, maxLines] of budgets) {
-    for (const file of listFiles(path.join(ROOT, dir), ".js")) {
-      const lines = fs.readFileSync(file, "utf8").split(/\r?\n/).length;
-      assert.ok(lines <= maxLines, `${path.relative(ROOT, file)} has ${lines} lines, max ${maxLines}`);
-    }
+  for (const file of boundaryFiles) {
+    const text = readProjectFile(file);
+    assert.equal(/DatabaseSync|createMigratedDatabase|create[A-Za-z]+Repository/.test(text), false, file);
   }
 });
 
@@ -38,3 +47,14 @@ function listFiles(dir, extension) {
   });
 }
 
+function readProjectFile(file) {
+  return fs.readFileSync(path.join(ROOT, file), "utf8");
+}
+
+function assertFileContains(file, snippet) {
+  assert.match(readProjectFile(file), new RegExp(escapeRegExp(snippet)), file);
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
