@@ -41,7 +41,8 @@ test("MCP wrapper lists mcp_health callable from workspace-local config", () => 
   const toolNames = parsed.tools.map((tool) => tool.name);
   for (const name of [
     "mcp_health_strength_exercise_catalog_list", "mcp_health_cardio_activity_catalog_list",
-    "mcp_health_apple_health_bulk_sync", "mcp_health_apple_daily_summaries_bulk_record", "mcp_health_apple_workouts_list",
+    "mcp_health_apple_health_bulk_sync", "mcp_health_apple_health_sync_state_get", "mcp_health_apple_health_incremental_sync",
+    "mcp_health_apple_daily_summaries_bulk_record", "mcp_health_apple_workouts_list",
     "mcp_health_apple_sleep_records_list", "mcp_health_apple_observations_list", "mcp_health_apple_import_files_list", "mcp_health_apple_route_points_list",
     "mcp_health_profile_update", "mcp_health_strength_session_record", "mcp_health_cardio_session_record", "mcp_health_body_measurement_update",
     "mcp_health_lab_result_record", "mcp_health_sleep_records_list", "mcp_health_risk_profile_record", "mcp_health_followup_task_create"
@@ -159,6 +160,8 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     assert.equal(appleBulk.counts.ecg_records, 1);
     assert.equal(appleBulk.counts.body_measurements, 4);
     assert.equal(appleBulk.counts.vitals, 1);
+    const syncState = await mcpCall(workspace, "mcp_health_apple_health_sync_state_get", {});
+    assert.equal(syncState.domains.daily_summaries.latest_record_at, "2026-06-15");
     const appleSleep = await mcpCall(workspace, "mcp_health_apple_sleep_records_list", { limit: 5 });
     assert.deepEqual(appleSleep.records.map((record) => record.total_sleep_minutes), [450]);
 

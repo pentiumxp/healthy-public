@@ -107,6 +107,50 @@ test("Apple Health bulk sync accepts Home AI proxy workspace context", async () 
   }
 });
 
+test("Apple Health sync state supports latest-only native synchronization", async () => {
+  const services = createTestServices();
+  const server = createServer(services);
+  await listen(server);
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    await provision(base, "weixin_test_1", "key-test");
+    const launchToken = await launch(base, "weixin_test_1", "key-test");
+    const emptyState = await api(base, "/api/v1/apple-health/sync-state", "GET", launchToken);
+    assert.equal(emptyState.domains.daily_summaries.latest_record_at, null);
+    assert.equal(emptyState.domains.workouts.record_count, 0);
+    assert.equal(emptyState.instructions.write_endpoint, "/api/v1/apple-health/incremental-sync");
+
+    const noPayload = await api(base, "/api/v1/apple-health/incremental-sync", "POST", launchToken, {
+      source: "apple_health_ios",
+      range: "latest"
+    });
+    assert.equal(noPayload.mode, "incremental");
+    assert.deepEqual(noPayload.counts, {
+      daily_summaries: 0, workouts: 0, sleep_records: 0,
+      ecg_records: 0, body_measurements: 0, vitals: 0
+    });
+
+    await api(base, "/api/v1/apple-health/incremental-sync", "POST", launchToken, {
+      source: "apple_health_ios",
+      range: "latest",
+      daily_summaries: [{ summaryDate: "2026-06-17", steps: 3210 }],
+      workouts: [{ startedAt: "2026-06-17T08:00:00+08:00", endedAt: "2026-06-17T08:30:00+08:00", appleActivityType: "walking", durationSeconds: 1800 }],
+      sleep_records: [{ sleepStart: "2026-06-16T23:00:00+08:00", sleepEnd: "2026-06-17T06:00:00+08:00" }],
+      ecg_records: [{ externalId: "latest-ecg-1", recordedAt: "2026-06-17T07:00:00+08:00", classification: "sinus rhythm" }],
+      vitals: [{ measuredAt: "2026-06-17T07:01:00+08:00", metric: "heart_rate", value: 67 }]
+    });
+    const state = await api(base, "/api/v1/apple-health/sync-state", "GET", launchToken);
+    assert.equal(state.domains.daily_summaries.latest_record_at, "2026-06-17");
+    assert.equal(state.domains.workouts.latest_record_at, "2026-06-17T00:30:00.000Z");
+    assert.equal(state.domains.sleep_records.latest_record_at, "2026-06-16T22:00:00.000Z");
+    assert.equal(state.domains.ecg_records.latest_record_at, "2026-06-16T23:00:00.000Z");
+    assert.equal(state.domains.vitals.latest_record_at, "2026-06-16T23:01:00.000Z");
+    assert.match(state.domains.vitals.recommended_since, /^2026-06-14T23:01:00/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 async function provision(base, hermesWorkspaceId, rawKey) {
   const response = await fetch(`${base}/api/v1/hermes/plugin/workspaces`, {
     method: "POST",

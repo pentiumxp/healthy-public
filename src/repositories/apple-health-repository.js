@@ -1,9 +1,11 @@
 const { newId } = require("../utils/ids");
 const { nowIso } = require("../utils/time");
 const { createAppleHealthEcgRepository } = require("./apple-health-ecg-repository");
+const { createAppleHealthSyncStateRepository } = require("./apple-health-sync-state-repository");
 const { createWorkoutHeartRateRepository } = require("./apple-health-workout-heart-rate-repository");
 function createAppleHealthRepository(db, { clock } = {}) {
   const ecgRepository = createAppleHealthEcgRepository(db, { clock });
+  const syncStateRepository = createAppleHealthSyncStateRepository(db);
   const workoutHeartRate = createWorkoutHeartRateRepository(db, { clock });
   function upsertDailySummary(userId, record) {
     const now = nowIso(clock);
@@ -46,7 +48,6 @@ function createAppleHealthRepository(db, { clock } = {}) {
     }
     return out;
   }
-
   function upsertWorkout(userId, record) {
     const now = nowIso(clock);
     const id = newId("ahw");
@@ -80,7 +81,6 @@ function createAppleHealthRepository(db, { clock } = {}) {
     workoutHeartRate.upsertWorkoutHeartRate(userId, workout, record);
     return workoutHeartRate.attachWorkoutHeartRate(workout);
   }
-
   function upsertWorkouts(userId, records) {
     const out = [];
     db.exec("BEGIN");
@@ -93,7 +93,6 @@ function createAppleHealthRepository(db, { clock } = {}) {
     }
     return out;
   }
-
   function upsertSleepRecords(userId, records) {
     const out = [];
     db.exec("BEGIN");
@@ -201,13 +200,15 @@ function createAppleHealthRepository(db, { clock } = {}) {
 
   function upsertEcgRecords(userId, records) { return ecgRepository.upsertEcgRecords(userId, records); }
 
+  function getSyncState(userId) { return syncStateRepository.getSyncState(userId); }
+
   function getByExternal(table, userId, sourceType, externalId) {
     return db.prepare(`SELECT * FROM ${table} WHERE user_id = ? AND source_type = ? AND external_id = ?`)
       .get(userId, sourceType, externalId);
   }
 
   return {
-    getEcgRecord, listDailySummaries, listEcgRecords, listImportFiles,
+    getEcgRecord, getSyncState, listDailySummaries, listEcgRecords, listImportFiles,
     listObservations, listRoutePoints, listSleepRecords, listWorkouts,
     upsertDailySummaries, upsertDailySummary, upsertEcgRecords,
     upsertSleepRecords, upsertWorkouts, upsertWorkout

@@ -69,6 +69,17 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, services.appleHealthService.bulkSync({ ...body, workspaceRef }));
     return true;
   }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/sync-state") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.getSyncState({ workspaceRef }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/incremental-sync") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.incrementalSync({ ...body, workspaceRef }));
+    return true;
+  }
   if (req.method === "POST" && url.pathname === "/api/v1/apple-health/daily-summaries/bulk") {
     const body = await readJson(req);
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });

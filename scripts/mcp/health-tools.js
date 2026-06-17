@@ -67,6 +67,8 @@ const TOOLS = [
   tool("mcp_health_cardio_sessions_list", "List cardio/aerobic workout sessions for the configured workspace.", {}),
   tool("mcp_health_cardio_session_record", "Record a cardio/aerobic workout session. Use this for indoor_walk, elliptical, run, cycling, rowing, and outdoor_walk instead of clinical_event.", cardioProps(), ["startedAt", "activityType"]),
   tool("mcp_health_apple_health_bulk_sync", "Bulk upsert Apple Health data from the native iOS shell. Workspace and credentials are resolved by the MCP wrapper, not by tool arguments.", appleHealthBulkProps()),
+  tool("mcp_health_apple_health_sync_state_get", "Return Apple Health sync watermarks. Native clients should query HealthKit after recommended_since and skip writes when no new samples exist.", {}),
+  tool("mcp_health_apple_health_incremental_sync", "Upsert only the latest Apple Health payload selected by the native client after reading sync_state. Uses the same idempotent keys as bulk sync.", appleHealthBulkProps()),
   tool("mcp_health_apple_daily_summaries_list", "List long-term Apple Health daily summaries such as steps, energy, exercise minutes, distance, and heart rate.", { limit: numberProp() }),
   tool("mcp_health_apple_daily_summary_record", "Record or update one Apple Health daily summary from the native app shell.", appleDailyProps(), ["summaryDate"]),
   tool("mcp_health_apple_daily_summaries_bulk_record", "Bulk upsert Apple Health daily summaries for initial native app synchronization.", { records: { type: "array", minItems: 1, items: { type: "object", additionalProperties: true } } }, ["records"]),
@@ -158,6 +160,8 @@ async function dispatch(name, args, client) {
   if (name === "mcp_health_cardio_sessions_list") return await client.listCardioSessions();
   if (name === "mcp_health_cardio_session_record") return await client.createCardioSession(args);
   if (name === "mcp_health_apple_health_bulk_sync") return await client.bulkSyncAppleHealth(args);
+  if (name === "mcp_health_apple_health_sync_state_get") return await client.getAppleHealthSyncState();
+  if (name === "mcp_health_apple_health_incremental_sync") return await client.incrementalSyncAppleHealth(args);
   if (name === "mcp_health_apple_daily_summaries_list") return await client.listAppleDailySummaries(args);
   if (name === "mcp_health_apple_daily_summary_record") return await client.createAppleDailySummary(args);
   if (name === "mcp_health_apple_daily_summaries_bulk_record") return await client.createAppleDailySummaries(args);

@@ -5,6 +5,7 @@ const { stringOrNull } = require("../../utils/sqlite-values");
 const { normalizeCardioActivity } = require("../training/training-catalog");
 const { createEcgNormalizer } = require("./ecg-normalizer");
 const { createAppleListService } = require("./apple-list-service");
+const { decorateSyncState } = require("./sync-state-service");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
 const ecgNormalizer = createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime });
 const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
@@ -30,6 +31,11 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     }, warnings: [] };
   }
 
+  function incrementalSync(input) { return { ...bulkSync(input), mode: "incremental" }; }
+  function getSyncState(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    return decorateSyncState(appleHealthRepository.getSyncState(user.id));
+  }
   function recordDailySummary(input) {
     assertCleanText(input, "appleHealthDailySummary");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
@@ -102,7 +108,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
   }
 
   return {
-    bulkSync, getEcgRecord, getSnapshot, listDailySummaries,
+    bulkSync, getEcgRecord, getSnapshot, getSyncState, incrementalSync, listDailySummaries,
     listEcgRecords: lists.listEcgRecords, listImportFiles: lists.listImportFiles,
     listObservations: lists.listObservations, listRoutePoints: lists.listRoutePoints,
     listSleepRecords: lists.listSleepRecords,
@@ -184,7 +190,6 @@ function normalizeSleep(input) {
 }
 
 function normalizeEcg(input) { return ecgNormalizer.normalizeEcg(input); }
-
 function normalizeMeasurement(input, kind) {
   return {
     measuredAt: requireIsoDateTime(input.measuredAt ?? input.measured_at ?? input.observedAt ?? input.observed_at, "measuredAt"),
@@ -207,7 +212,6 @@ function boundedMetadata(value) {
 }
 
 function bulkResult(saved) { return { ok: true, count: saved.length, latest: saved[0] || null }; }
-
 function distanceM(value, unit) {
   const number = numberOrNull(value);
   if (number == null) return null;
@@ -219,9 +223,7 @@ function distanceM(value, unit) {
 }
 
 function externalId(input, fallback) { return String(input.externalId || input.external_id || input.importKey || input.import_key || fallback).trim(); }
-
 function integerOrNull(value) { const number = numberOrNull(value); return number == null ? null : Math.round(number); }
-
 function standHours(input) {
   const hours = numberOrNull(input.standHours ?? input.stand_hours);
   if (hours != null) return hours;
@@ -241,7 +243,6 @@ function requiredRecords(input) {
 }
 
 function array(value) { return Array.isArray(value) ? value : []; }
-
 function numberOrNull(value) {
   if (value == null || value === "") return null;
   const number = Number(value);
@@ -250,7 +251,6 @@ function numberOrNull(value) {
 }
 
 function normalizeKey(value) { return String(value || "").trim().toLowerCase().replace(/[^a-z0-9+.-]+/g, "_").replace(/^_+|_+$/g, ""); }
-
 function normalizeMetric(value) {
   const raw = String(value || "").trim();
   const compact = raw.replace(/[^a-z0-9]+/gi, "").toLowerCase();

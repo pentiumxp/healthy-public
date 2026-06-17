@@ -37,6 +37,8 @@ Profile 和用药：
 Apple Health 原生数据：
 
 - `mcp_health_apple_health_bulk_sync`
+- `mcp_health_apple_health_sync_state_get`
+- `mcp_health_apple_health_incremental_sync`
 - `mcp_health_apple_daily_summaries_list`
 - `mcp_health_apple_daily_summary_record`
 - `mcp_health_apple_daily_summaries_bulk_record`
@@ -81,6 +83,18 @@ Apple Health：
 - 初次同步近几年数据时应优先使用 `mcp_health_apple_health_bulk_sync`；
   服务端按当前 MCP wrapper workspace 和 `source_type + external_id`
   幂等更新，不回显完整大 payload。
+- 日常自动同步和“最新同步”必须先调用
+  `mcp_health_apple_health_sync_state_get` 或 HTTP
+  `GET /api/v1/apple-health/sync-state` 获取每类数据的服务端水位。
+  原生壳按返回的 `recommended_since` 查询 HealthKit；如果 HealthKit 没有
+  返回新样本，就不调用写入接口。
+- 最新增量写入使用 `mcp_health_apple_health_incremental_sync` 或 HTTP
+  `POST /api/v1/apple-health/incremental-sync`。payload 结构与 bulk sync
+  相同，但调用方必须只传水位之后的新数据或小范围重叠数据，避免把最近一年
+  或全量数据作为单个请求打到代理层造成 504。
+- `sync-state` 返回的 `recommended_since` 默认比服务端最新记录早 48 小时，
+  用于吸收 Apple Health/Oura 睡眠、心率等迟到修正；重复记录仍由
+  `source_type + external_id` 幂等键覆盖。
 - Apple Health workout 只表示 HealthKit 层面的运动项目。深蹲、卧推、推肩等
   专项力量动作仍使用 `mcp_health_strength_session_record` 和 canonical
   strength catalog。
