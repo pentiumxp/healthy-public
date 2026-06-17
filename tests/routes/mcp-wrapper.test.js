@@ -44,7 +44,7 @@ test("MCP wrapper lists mcp_health callable from workspace-local config", () => 
     "mcp_health_apple_health_bulk_sync", "mcp_health_apple_daily_summaries_bulk_record", "mcp_health_apple_workouts_list",
     "mcp_health_apple_sleep_records_list", "mcp_health_apple_observations_list", "mcp_health_apple_import_files_list", "mcp_health_apple_route_points_list",
     "mcp_health_profile_update", "mcp_health_strength_session_record", "mcp_health_cardio_session_record", "mcp_health_body_measurement_update",
-    "mcp_health_lab_result_record", "mcp_health_risk_profile_record", "mcp_health_followup_task_create"
+    "mcp_health_lab_result_record", "mcp_health_sleep_records_list", "mcp_health_risk_profile_record", "mcp_health_followup_task_create"
   ]) assert.ok(toolNames.includes(name), name);
   assert.doesNotMatch(result.stdout, /synthetic-key/);
 });

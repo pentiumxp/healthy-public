@@ -118,7 +118,8 @@ const TOOLS = [
   tool("mcp_health_symptom_record", "Record one symptom observation.", symptomProps(), ["observedAt", "symptomKey"]),
   tool("mcp_health_symptoms_list", "List symptom timeline.", { symptomKey: stringProp(), status: stringProp() }),
   tool("mcp_health_recovery_sleep_record", "Record one sleep or recovery observation.", sleepProps(), ["sleepStart"]),
-  tool("mcp_health_recovery_sleep_list", "List sleep and recovery timeline.", { sourceType: stringProp() }),
+  tool("mcp_health_recovery_sleep_list", "List sleep and recovery timeline, including Apple Health sleepAnalysis when available.", { sourceType: stringProp(), limit: numberProp() }),
+  tool("mcp_health_sleep_records_list", "Unified sleep list across Apple Health sleepAnalysis and recovery sleep records.", { sourceType: stringProp(), limit: numberProp() }),
   tool("mcp_health_risk_profile_record", "Record one risk profile assessment without overwriting prior assessments.", riskProps(), ["assessedAt", "riskKey", "label"]),
   tool("mcp_health_risk_profiles_list", "List risk profile assessment timeline.", { riskKey: stringProp(), status: stringProp() }),
   tool("mcp_health_followup_task_create", "Create one follow-up task.", followupProps(), ["title"]),
@@ -176,6 +177,7 @@ async function dispatch(name, args, client) {
     return await client.updateBodyMeasurement(measurementId, patch);
   }
   if (name === "mcp_health_metrics_trends") return trends(await client.getDashboard(), await client.listBodyMeasurements(args));
+  if (name === "mcp_health_recovery_sleep_list" || name === "mcp_health_sleep_records_list") return await listSleepRecords(args, client);
   const medical = medicalTool(name);
   if (medical && medical.action === "record") return await client.createMedicalRecord(medical.path, args);
   if (medical && medical.action === "list") return await client.listMedicalRecords(medical.path, args);
@@ -200,7 +202,6 @@ function medicalTool(name) {
     mcp_health_symptom_record: ["symptoms", "record"],
     mcp_health_symptoms_list: ["symptoms", "list"],
     mcp_health_recovery_sleep_record: ["recovery-sleep", "record"],
-    mcp_health_recovery_sleep_list: ["recovery-sleep", "list"],
     mcp_health_risk_profile_record: ["risk-profiles", "record"],
     mcp_health_risk_profiles_list: ["risk-profiles", "list"],
     mcp_health_followup_task_create: ["followup-tasks", "record"],
@@ -233,6 +234,40 @@ function trends(dashboard, measurements) {
     body: { latest: dashboard.body && dashboard.body.latest, measurements: measurements.measurements || [] },
     warnings: []
   };
+}
+
+async function listSleepRecords(args, client) {
+  const source = normalizeSource(args.sourceType);
+  const includeApple = !source || ["apple_health", "apple_health_sleep", "healthkit"].includes(source);
+  const includeRecovery = !source || !includeApple;
+  const records = [];
+  if (includeRecovery) {
+    const recovery = await client.listMedicalRecords("recovery-sleep", recoverySleepArgs(args, source));
+    records.push(...(recovery.records || []).map((record) => ({ ...record, record_domain: "recovery_sleep" })));
+  }
+  if (includeApple) {
+    const apple = await client.listAppleSleepRecords({ limit: args.limit });
+    records.push(...(apple.records || []).map((record) => ({
+      ...record,
+      source_type: "Apple Health",
+      record_domain: "apple_health_sleep"
+    })));
+  }
+  return { records: records.sort((a, b) => String(b.sleep_start || "").localeCompare(String(a.sleep_start || ""))).slice(0, boundedLimit(args.limit, 50)) };
+}
+
+function boundedLimit(value, fallback) {
+  const number = Number(value || fallback);
+  return Number.isFinite(number) ? Math.max(1, Math.min(100, Math.round(number))) : fallback;
+}
+
+function recoverySleepArgs(args, source) {
+  const { limit, ...rest } = args;
+  return source ? rest : { ...rest, sourceType: undefined };
+}
+
+function normalizeSource(value) {
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 
 function boundProfile(data) {

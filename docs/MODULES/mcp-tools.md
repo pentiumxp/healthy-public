@@ -44,6 +44,7 @@ Apple Health 原生数据：
 - `mcp_health_apple_workout_record`
 - `mcp_health_apple_workouts_bulk_record`
 - `mcp_health_apple_sleep_records_list`
+- `mcp_health_sleep_records_list`
 - `mcp_health_apple_ecg_records_list`
 - `mcp_health_apple_ecg_record_get`
 - `mcp_health_apple_observations_list`
@@ -91,9 +92,12 @@ Apple Health：
   需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
   来源的睡眠/恢复观察仍可使用 `mcp_health_recovery_sleep_record`。
-- Apple Health 睡眠查询使用 `mcp_health_apple_sleep_records_list`。
-  `mcp_health_recovery_sleep_list` 只查 `recovery_sleep_records`，不会返回
-  HealthKit `sleepAnalysis` 同步数据。
+- 睡眠自然语言查询优先使用 `mcp_health_sleep_records_list`；它合并
+  `apple_health_sleep_records` 和 `recovery_sleep_records`。保留
+  `mcp_health_apple_sleep_records_list` 作为 Apple Health 专用明细入口。
+- `mcp_health_recovery_sleep_list` 为兼容旧调用保留；读取时也会返回
+  Apple Health `sleepAnalysis`，但写入仍只通过
+  `mcp_health_recovery_sleep_record` 写入人工/非 Apple 恢复观察。
 - ECG 同步长期保存到 `apple_health_ecg_records` 和
   `apple_health_ecg_voltage_samples`；bulk payload 字段为 `ecg_records`，
   也兼容 `ecgRecords` 和 `electrocardiograms`。
