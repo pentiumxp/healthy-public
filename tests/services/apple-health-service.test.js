@@ -133,6 +133,27 @@ test("Apple Health bulk sync can repeat body and vitals without optional confide
   assert.equal(services.bodyService.listMeasurements({ workspaceRef: "health:weixin_test_1", metric: "heart_rate" }).length, 1);
 });
 
+test("Apple Health repeated vitals are not rewritten when unchanged", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+  const payload = {
+    workspaceRef: "health:weixin_test_1", source: "apple_health_ios", range: "latest",
+    vitals: Array.from({ length: 300 }, (_, index) => ({
+      measuredAt: new Date(Date.UTC(2026, 5, 16, 8, 0, index)).toISOString(),
+      metric: "heart_rate", value: 70 + (index % 20), unit: "bpm"
+    }))
+  };
+
+  services.appleHealthService.bulkSync(payload);
+  const sql = "SELECT COUNT(*) AS n, MAX(updated_at) AS updated_at FROM body_measurements WHERE source_type = 'apple_health_vitals'";
+  const before = services.db.prepare(sql).get();
+  services.appleHealthService.bulkSync(payload);
+  const after = services.db.prepare(sql).get();
+
+  assert.equal(after.n, 300);
+  assert.equal(after.updated_at, before.updated_at);
+});
+
 test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists records", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

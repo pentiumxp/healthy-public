@@ -6,6 +6,7 @@ const { normalizeCardioActivity } = require("../training/training-catalog");
 const { createEcgNormalizer } = require("./ecg-normalizer");
 const { createAppleListService } = require("./apple-list-service");
 const { decorateSyncState } = require("./sync-state-service");
+const { createMeasurementUpserter } = require("./measurement-upserter");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
 const ecgNormalizer = createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime });
 const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
@@ -16,6 +17,7 @@ const METRIC_ALIASES = Object.freeze({
 });
 function createAppleHealthService({ profileService, appleHealthRepository, bodyService }) {
   const lists = createAppleListService({ profileService, appleHealthRepository, limit });
+  const measurementUpserter = createMeasurementUpserter({ bodyService, inputError });
   function bulkSync(input) {
     assertCleanText(input, "appleHealthBulkSync");
     const user = profileService.getUserByWorkspace(input.workspaceRef);
@@ -92,19 +94,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
   }
 
   function recordMeasurements(workspaceRef, records, kind) {
-    if (!records.length) return [];
-    if (!bodyService) throw inputError("body service is unavailable");
-    return records.map((record) => upsertBodyMeasurement(workspaceRef, normalizeMeasurement(record, kind)));
-  }
-
-  function upsertBodyMeasurement(workspaceRef, measurement) {
-    const existing = bodyService.listMeasurements({ workspaceRef, metric: measurement.metric }).find((row) => {
-      return row.measured_at === measurement.measuredAt
-        && row.source_type === measurement.sourceType
-        && (row.body_part || "") === (measurement.bodyPart || "");
-    });
-    if (existing) return bodyService.updateMeasurement({ ...measurement, workspaceRef, measurementId: existing.id });
-    return bodyService.recordMeasurement({ ...measurement, workspaceRef });
+    return measurementUpserter.recordMeasurements(workspaceRef, records, kind, normalizeMeasurement);
   }
 
   return {
