@@ -312,10 +312,17 @@ strength session / MCP strength 工具保存，不从 Apple Health workout
 - `normalized_activity_type`
 - `duration_seconds`
 - `distance_m`
+- `elevation_gain_m`
+- `elevation_loss_m`
 - `active_energy_kcal`
 - `total_energy_kcal`
 - `average_heart_rate_bpm`
 - `source_type`
+- `source_name`
+- `source_bundle_identifier`
+- `device_name`
+- `device_manufacturer`
+- `device_model`
 - `source_ref`
 - `metadata_json`
 - `notes`

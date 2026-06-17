@@ -56,9 +56,11 @@ function createAppleHealthRepository(db, { clock } = {}) {
       `INSERT INTO apple_health_workouts
        (id, user_id, external_id, started_at, ended_at, apple_activity_type,
         normalized_activity_type, duration_seconds, distance_m, active_energy_kcal,
-        total_energy_kcal, average_heart_rate_bpm, source_type, source_ref,
-        metadata_json, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        total_energy_kcal, average_heart_rate_bpm, elevation_gain_m,
+        elevation_loss_m, source_type, source_name, source_bundle_identifier,
+        device_name, device_manufacturer, device_model, source_ref, metadata_json, notes,
+        created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(user_id, source_type, external_id) DO UPDATE SET
         started_at = excluded.started_at,
         ended_at = excluded.ended_at,
@@ -69,6 +71,13 @@ function createAppleHealthRepository(db, { clock } = {}) {
         active_energy_kcal = excluded.active_energy_kcal,
         total_energy_kcal = excluded.total_energy_kcal,
         average_heart_rate_bpm = excluded.average_heart_rate_bpm,
+        elevation_gain_m = COALESCE(excluded.elevation_gain_m, elevation_gain_m),
+        elevation_loss_m = COALESCE(excluded.elevation_loss_m, elevation_loss_m),
+        source_name = COALESCE(excluded.source_name, source_name),
+        source_bundle_identifier = COALESCE(excluded.source_bundle_identifier, source_bundle_identifier),
+        device_name = COALESCE(excluded.device_name, device_name),
+        device_manufacturer = COALESCE(excluded.device_manufacturer, device_manufacturer),
+        device_model = COALESCE(excluded.device_model, device_model),
         source_ref = excluded.source_ref,
         metadata_json = excluded.metadata_json,
         notes = excluded.notes,
@@ -76,8 +85,11 @@ function createAppleHealthRepository(db, { clock } = {}) {
     ).run(id, userId, record.externalId, record.startedAt, record.endedAt,
       record.appleActivityType, record.normalizedActivityType, record.durationSeconds,
       record.distanceM, record.activeEnergyKcal, record.totalEnergyKcal,
-      record.averageHeartRateBpm, record.sourceType || "apple_health_workout",
-      record.sourceRef || null, JSON.stringify(record.metadata || {}), record.notes || null, now, now);
+      record.averageHeartRateBpm, record.elevationGainM, record.elevationLossM,
+      record.sourceType || "apple_health_workout", record.sourceName || null,
+      record.sourceBundleIdentifier || null, record.deviceName || null,
+      record.deviceManufacturer || null, record.deviceModel || null, record.sourceRef || null,
+      JSON.stringify(record.metadata || {}), record.notes || null, now, now);
     const workout = getByExternal("apple_health_workouts", userId, record.sourceType || "apple_health_workout", record.externalId);
     workoutHeartRate.upsertWorkoutHeartRate(userId, workout, record);
     return workoutHeartRate.attachWorkoutHeartRate(workout);

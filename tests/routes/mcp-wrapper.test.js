@@ -142,9 +142,13 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     const appleWorkout = await mcpCall(workspace, "mcp_health_apple_workout_record", {
       startedAt: "2026-06-15T19:00:00+08:00",
       appleActivityType: "outdoor walk",
-      durationSeconds: 1800
+      durationSeconds: 1800,
+      elevationGainM: 190,
+      sourceName: "Technogym"
     });
     assert.equal(appleWorkout.apple_activity_type, "outdoor_walk");
+    assert.equal(appleWorkout.elevation_gain_m, 190);
+    assert.equal(appleWorkout.source_name, "Technogym");
     const appleBulk = await mcpCall(workspace, "mcp_health_apple_health_bulk_sync", {
       source: "apple_health_ios",
       range: "last7",

@@ -331,7 +331,7 @@ function appleDailyProps() {
 }
 
 function appleWorkoutProps() {
-  return { externalId: stringProp(), startedAt: stringProp(true), endedAt: stringProp(), appleActivityType: stringProp(), normalizedActivityType: stringProp(), workoutType: stringProp(), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), averageHeartRateBpm: numberProp(), minHeartRateBpm: numberProp(), maxHeartRateBpm: numberProp(), heartRateSummary: objectProp(), heartRateSamples: arrayObjectsProp(), sourceType: stringProp(), sourceRef: stringProp(), metadata: objectProp(), notes: stringProp() };
+  return { externalId: stringProp(), startedAt: stringProp(true), endedAt: stringProp(), appleActivityType: stringProp(), normalizedActivityType: stringProp(), workoutType: stringProp(), durationSeconds: numberProp(), distanceValue: numberProp(), distanceUnit: stringProp(), distanceM: numberProp(), distanceKm: numberProp(), elevationGainM: numberProp(), elevationLossM: numberProp(), elevationAscendedM: numberProp(), elevationDescendedM: numberProp(), activeEnergyKcal: numberProp(), totalEnergyKcal: numberProp(), averageHeartRateBpm: numberProp(), minHeartRateBpm: numberProp(), maxHeartRateBpm: numberProp(), heartRateSummary: objectProp(), heartRateSamples: arrayObjectsProp(), sourceType: stringProp(), sourceName: stringProp(), sourceBundleIdentifier: stringProp(), deviceName: stringProp(), deviceManufacturer: stringProp(), deviceModel: stringProp(), sourceRef: stringProp(), metadata: objectProp(), notes: stringProp() };
 }
 
 function appleHealthBulkProps() {

@@ -28,6 +28,10 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
         startedAt: "2026-06-15T19:00:00+08:00",
         appleActivityType: "outdoor walk",
         durationSeconds: 1800,
+        elevationGainM: 190,
+        elevationLossM: 8,
+        sourceName: "Technogym",
+        deviceManufacturer: "Technogym",
         averageHeartRateBpm: 116,
         minHeartRateBpm: 91,
         maxHeartRateBpm: 138,
@@ -58,6 +62,10 @@ test("Apple Health bulk APIs write long-term workspace-local data", async () => 
     const testDashboard = await api(base, "/api/v1/dashboard", "GET", testLaunch);
     assert.equal(ownerDashboard.appleHealth.latestDaily.step_count, 10200);
     assert.equal(ownerDashboard.appleHealth.workouts[0].apple_activity_type, "outdoor_walk");
+    assert.equal(ownerDashboard.appleHealth.workouts[0].elevation_gain_m, 190);
+    assert.equal(ownerDashboard.appleHealth.workouts[0].elevation_loss_m, 8);
+    assert.equal(ownerDashboard.appleHealth.workouts[0].source_name, "Technogym");
+    assert.equal(ownerDashboard.appleHealth.workouts[0].device_manufacturer, "Technogym");
     assert.equal(ownerDashboard.appleHealth.workouts[0].heart_rate_summary.max_heart_rate_bpm, 138);
     assert.equal(ownerDashboard.appleHealth.workouts[0].heart_rate_samples.length, 2);
     assert.equal(ownerDashboard.appleHealth.latestSleep.total_sleep_minutes, 420);

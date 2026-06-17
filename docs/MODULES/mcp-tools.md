@@ -99,9 +99,13 @@ Apple Health：
   专项力量动作仍使用 `mcp_health_strength_session_record` 和 canonical
   strength catalog。
 - Workout 支持 `averageHeartRateBpm`、`minHeartRateBpm`、`maxHeartRateBpm`、
-  `heartRateSummary` 和 `heartRateSamples`。`heartRateSamples` 元素字段为
-  `externalId`、`sampledAt`、`heartRateBpm`；原生壳应优先传 HealthKit
-  sample UUID 作为 `externalId`，用于幂等覆盖。
+  `elevationGainM`、`elevationLossM`、`heartRateSummary` 和
+  `heartRateSamples`。`heartRateSamples` 元素字段为 `externalId`、
+  `sampledAt`、`heartRateBpm`；原生壳应优先传 HealthKit sample UUID
+  作为 `externalId`，用于幂等覆盖。
+- Workout 来源/设备信息支持 `sourceName`、`sourceBundleIdentifier`、
+  `deviceName`、`deviceManufacturer`、`deviceModel`，用于暴露 Technogym
+  等 Apple Health connected device/source。
 - Owner 的 Apple Health 清洗导出 workout CSV 没有训练期间心率曲线；训练心率图
   需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple

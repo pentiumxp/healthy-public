@@ -33,8 +33,15 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
         appleActivityType: "outdoor walk",
         durationSeconds: 1800,
         distanceKm: 2.4,
+        elevationGainM: 190,
+        elevationLossM: 12,
         activeEnergyKcal: 130,
         averageHeartRateBpm: 118,
+        sourceName: "Technogym",
+        sourceBundleIdentifier: "com.technogym.mywellness",
+        deviceName: "Technogym Treadmill",
+        deviceManufacturer: "Technogym",
+        deviceModel: "Run",
         heartRateSummary: { minHeartRateBpm: 92, maxHeartRateBpm: 141, zone2Seconds: 900 },
         heartRateSamples: [
           { externalId: "walk-1-hr-1", sampledAt: "2026-06-15T19:00:05+08:00", heartRateBpm: 92 },
@@ -80,6 +87,10 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.appleHealth.workouts.length, 2);
   assert.equal(dashboard.appleHealth.workouts[0].apple_activity_type, "outdoor_walk");
   assert.equal(dashboard.appleHealth.workouts[0].normalized_activity_type, "outdoor_walk");
+  assert.equal(dashboard.appleHealth.workouts[0].elevation_gain_m, 190);
+  assert.equal(dashboard.appleHealth.workouts[0].elevation_loss_m, 12);
+  assert.equal(dashboard.appleHealth.workouts[0].source_name, "Technogym");
+  assert.equal(dashboard.appleHealth.workouts[0].device_manufacturer, "Technogym");
   assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.average_heart_rate_bpm, 118);
   assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.min_heart_rate_bpm, 93);
   assert.equal(dashboard.appleHealth.workouts[0].heart_rate_summary.max_heart_rate_bpm, 93);
