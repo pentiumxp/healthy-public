@@ -1,4 +1,5 @@
 const { normalizeEcgClassification } = require("./ecg-classification");
+const { stringOrNull } = require("../../utils/sqlite-values");
 
 function createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime }) {
   function normalizeEcg(input) {
@@ -18,9 +19,9 @@ function createEcgNormalizer({ boundedMetadata, externalId, inputError, integerO
       symptomsStatus: normalizeKey(input.symptomsStatus ?? input.symptoms_status),
       voltageSamples: samples,
       sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_ecg"),
-      sourceRef: input.sourceRef || input.source_ref,
+      sourceRef: stringOrNull(input.sourceRef ?? input.source_ref),
       metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision || input.device),
-      notes: input.notes
+      notes: stringOrNull(input.notes)
     };
   }
 
@@ -37,7 +38,7 @@ function createEcgNormalizer({ boundedMetadata, externalId, inputError, integerO
     if (voltage == null) throw inputError("voltageMicrovolts is required");
     const sampleIndex = integerOrNull(sample.sampleIndex ?? sample.sample_index ?? index);
     return {
-      externalId: sample.externalId || sample.external_id,
+      externalId: stringOrNull(sample.externalId ?? sample.external_id),
       sampleIndex,
       offsetMs: numberOrNull(sample.offsetMs ?? sample.offset_ms) ?? (hz ? (sampleIndex * 1000) / hz : null),
       voltageMicrovolts: voltage

@@ -1,6 +1,7 @@
 const { inputError } = require("../../utils/errors");
 const { assertCleanText } = require("../../utils/text-integrity");
 const { requireIsoDateTime } = require("../../utils/time");
+const { stringOrNull } = require("../../utils/sqlite-values");
 const { normalizeCardioActivity } = require("../training/training-catalog");
 const { createEcgNormalizer } = require("./ecg-normalizer");
 const { createAppleListService } = require("./apple-list-service");
@@ -152,9 +153,9 @@ function normalizeWorkout(input) {
     heartRateSummary: normalizeWorkoutHeartRateSummary(input),
     heartRateSamples: array(input.heartRateSamples ?? input.heart_rate_samples).map((sample) => normalizeWorkoutHeartRateSample(sample, startedAt)),
     sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_workout"),
-    sourceRef: input.sourceRef || input.source_ref,
+    sourceRef: stringOrNull(input.sourceRef ?? input.source_ref),
     metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision),
-    notes: input.notes
+    notes: stringOrNull(input.notes)
   };
 }
 
@@ -178,7 +179,7 @@ function normalizeSleep(input) {
     restingHeartRate: numberOrNull(input.restingHeartRate ?? input.resting_heart_rate),
     sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_sleep"),
     metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision),
-    notes: input.notes
+    notes: stringOrNull(input.notes)
   };
 }
 
@@ -190,11 +191,11 @@ function normalizeMeasurement(input, kind) {
     metric: normalizeMetric(input.metric),
     value: numberOrNull(input.value),
     unit: input.unit,
-    bodyPart: input.bodyPart ?? input.body_part,
+    bodyPart: stringOrNull(input.bodyPart ?? input.body_part),
     sourceType: normalizeKey(input.sourceType || input.source_type || `apple_health_${kind}`),
     confirmationStatus: input.confirmationStatus || input.confirmation_status || "confirmed",
     confidence: input.confidence,
-    notes: input.notes
+    notes: stringOrNull(input.notes)
   };
 }
 
@@ -255,5 +256,4 @@ function normalizeMetric(value) {
   const compact = raw.replace(/[^a-z0-9]+/gi, "").toLowerCase();
   return METRIC_ALIASES[compact] || normalizeKey(raw);
 }
-
 module.exports = { createAppleHealthService };

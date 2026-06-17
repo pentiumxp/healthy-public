@@ -92,6 +92,12 @@ ECG 需要能绘制心电图时，原生壳应同步 ECG waveform：优先传
 `voltageSamples`，也可传 `voltagesMicrovolts`。Healthy 会长期保存采样点，
 并通过 ECG record 读取接口返回 plot-ready `voltage_samples`。
 
+Apple Health bulk-sync 入库前必须把会绑定到 SQLite 的文本字段规整为标量
+字符串或 `null`，包括 workout/ECG `sourceRef`、`notes`、ECG sample
+`externalId`、body/vitals `bodyPart` 和 `notes`。如果 iOS 壳传入
+device/source revision 这类对象或数组，Healthy 应保存 bounded JSON 字符串，
+不能把对象/数组原样传给 SQLite bind。
+
 UI 边界：Apple Health 数据在 Healthy 主界面只显示同步状态，不重复展示步数、
 消耗热量、睡眠或 Apple workout 详情；这些具体指标属于 Apple Health 原生界面。
 Healthy 主界面优先展示服药、体检/医疗重点、来源发现和专项力量训练等互补数据。

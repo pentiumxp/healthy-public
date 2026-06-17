@@ -174,3 +174,49 @@ test("Apple Health ECG waveform samples are stored and returned plot-ready", () 
     { sample_index: 0, offset_ms: 0, voltage_microvolts: -10 }
   ]);
 });
+
+test("Apple Health bulk sync coerces structured source metadata before SQLite bind", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  const synced = services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    source: "apple_health_ios",
+    range: "last7",
+    workouts: [{
+      externalId: "structured-workout-1",
+      startedAt: "2026-06-16T08:00:00+08:00",
+      appleActivityType: "outdoor walk",
+      durationSeconds: 1200,
+      sourceRef: { device: "watch", sync: 1 },
+      notes: { raw: "bounded note object" },
+      metadata: { device: { model: "watch" } }
+    }],
+    body_measurements: [{
+      measuredAt: "2026-06-16T07:00:00+08:00",
+      metric: "weight",
+      value: 72.5,
+      unit: "kg",
+      bodyPart: { source: "scale" },
+      notes: ["ios", "health"]
+    }],
+    ecg_records: [{
+      externalId: "structured-ecg-1",
+      recordedAt: "2026-06-16T07:10:00+08:00",
+      classification: "sinus rhythm",
+      sourceRef: { device: "watch" },
+      notes: { source: "ios" },
+      voltageSamples: [{ externalId: { sample: 1 }, sampleIndex: 0, voltageMicrovolts: 10 }]
+    }]
+  });
+
+  assert.deepEqual(synced.counts, { daily_summaries: 0, workouts: 1, sleep_records: 0, ecg_records: 1, body_measurements: 1, vitals: 0 });
+  const workout = services.appleHealthService.listWorkouts({ workspaceRef: "health:weixin_test_1", limit: 1 }).records[0];
+  assert.match(workout.source_ref, /^\{"device":"watch"/);
+  const measurement = services.bodyService.listMeasurements({ workspaceRef: "health:weixin_test_1", metric: "weight" })[0];
+  assert.match(measurement.body_part, /^\{"source":"scale"/);
+  const ecg = services.appleHealthService.getEcgRecord({ workspaceRef: "health:weixin_test_1", externalId: "structured-ecg-1" }).record;
+  assert.match(ecg.source_ref, /^\{"device":"watch"/);
+  const sampleRow = services.db.prepare("SELECT external_id FROM apple_health_ecg_voltage_samples WHERE ecg_id = ? ORDER BY sample_index ASC LIMIT 1").get(ecg.id);
+  assert.match(sampleRow.external_id, /^\{"sample":1/);
+});
