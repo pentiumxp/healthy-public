@@ -59,7 +59,7 @@ function createBodyService({ profileService, bodyRepository }) {
       bodyPart: input.bodyPart,
       sourceType: input.sourceType || "manual",
       confirmationStatus: input.confirmationStatus || "confirmed",
-      confidence: input.confidence,
+      confidence: optionalNumber(input.confidence, "confidence"),
       notes: input.notes
     };
   }
@@ -75,6 +75,13 @@ function createBodyService({ profileService, bodyRepository }) {
     if (metric === "respiratory_rate") return "breaths/min";
     if (metric === "vo2_max") return "ml/kg/min";
     return "unit";
+  }
+
+  function optionalNumber(value, field) {
+    if (value == null || value === "") return null;
+    const number = Number(value);
+    if (!Number.isFinite(number)) throw inputError(`${field} must be a finite number`);
+    return number;
   }
 
   function listMeasurements(input) {

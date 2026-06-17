@@ -100,6 +100,39 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
   assert.equal(dashboard.body.latest.vo2_max.unit, "ml/kg/min");
 });
 
+test("Apple Health bulk sync can repeat body and vitals without optional confidence", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+  const payload = {
+    workspaceRef: "health:weixin_test_1",
+    source: "apple_health_ios",
+    range: "last7",
+    body_measurements: [{
+      measuredAt: "2026-06-15T07:00:00+08:00",
+      metric: "weight",
+      value: 72.5,
+      unit: "kg"
+    }],
+    vitals: [{
+      measuredAt: "2026-06-15T07:01:00+08:00",
+      metric: "heart_rate",
+      value: 67,
+      unit: "bpm"
+    }]
+  };
+
+  assert.deepEqual(services.appleHealthService.bulkSync(payload).counts, {
+    daily_summaries: 0, workouts: 0, sleep_records: 0,
+    ecg_records: 0, body_measurements: 1, vitals: 1
+  });
+  assert.deepEqual(services.appleHealthService.bulkSync(payload).counts, {
+    daily_summaries: 0, workouts: 0, sleep_records: 0,
+    ecg_records: 0, body_measurements: 1, vitals: 1
+  });
+  assert.equal(services.bodyService.listMeasurements({ workspaceRef: "health:weixin_test_1", metric: "weight" }).length, 1);
+  assert.equal(services.bodyService.listMeasurements({ workspaceRef: "health:weixin_test_1", metric: "heart_rate" }).length, 1);
+});
+
 test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists records", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

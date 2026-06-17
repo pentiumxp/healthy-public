@@ -194,7 +194,7 @@ function normalizeMeasurement(input, kind) {
     bodyPart: stringOrNull(input.bodyPart ?? input.body_part),
     sourceType: normalizeKey(input.sourceType || input.source_type || `apple_health_${kind}`),
     confirmationStatus: input.confirmationStatus || input.confirmation_status || "confirmed",
-    confidence: input.confidence,
+    confidence: numberOrNull(input.confidence),
     notes: stringOrNull(input.notes)
   };
 }
