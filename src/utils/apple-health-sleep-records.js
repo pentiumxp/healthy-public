@@ -2,17 +2,22 @@ const DAY_PATTERN = /^apple_health_sleep:(\d{4}-\d{2}-\d{2})(?::|$)/;
 
 function normalizeSleepDurations(record) {
   const out = { ...record };
-  const stageTotal = sumPresent(out.remMinutes, out.deepSleepMinutes, out.coreMinutes);
-  if (stageTotal != null && (out.totalSleepMinutes == null || out.coreMinutes != null)) {
-    out.totalSleepMinutes = stageTotal;
-  }
   if (out.inBedMinutes == null && out.sleepStart && out.sleepEnd) {
     out.inBedMinutes = minutesBetween(out.sleepStart, out.sleepEnd);
   }
-  if (out.inBedMinutes != null && out.awakeMinutes != null) {
-    out.totalSleepMinutes = Math.min(out.totalSleepMinutes ?? out.inBedMinutes, Math.max(0, out.inBedMinutes - out.awakeMinutes));
-  } else if (out.inBedMinutes != null && out.totalSleepMinutes != null) {
-    out.totalSleepMinutes = Math.min(out.totalSleepMinutes, out.inBedMinutes);
+  const maxSleepMinutes = maxSleepWithinWindow(out);
+  let stageTotal = sumPresent(out.remMinutes, out.deepSleepMinutes, out.coreMinutes);
+  if (stageTotal != null && maxSleepMinutes != null && stageTotal > maxSleepMinutes + 2) {
+    out.remMinutes = null;
+    out.deepSleepMinutes = null;
+    out.coreMinutes = null;
+    stageTotal = null;
+  }
+  if (stageTotal != null && (out.totalSleepMinutes == null || out.coreMinutes != null)) {
+    out.totalSleepMinutes = stageTotal;
+  }
+  if (maxSleepMinutes != null && out.totalSleepMinutes != null) {
+    out.totalSleepMinutes = Math.min(out.totalSleepMinutes, maxSleepMinutes);
   }
   return out;
 }
@@ -123,6 +128,12 @@ function sumPresent(...values) {
 function minutesBetween(start, end) {
   const diff = Date.parse(end) - Date.parse(start);
   return Number.isFinite(diff) && diff > 0 ? Math.round(diff / 60000) : null;
+}
+
+function maxSleepWithinWindow(record) {
+  if (record.inBedMinutes == null) return null;
+  if (record.awakeMinutes != null) return Math.max(0, record.inBedMinutes - record.awakeMinutes);
+  return record.inBedMinutes;
 }
 
 function numberOrNull(value) {

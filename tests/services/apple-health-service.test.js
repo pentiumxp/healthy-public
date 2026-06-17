@@ -197,6 +197,28 @@ test("Apple Health sleep sync keeps one self-consistent record per sleep day", (
   assert.equal(listed.length, 1);
   assert.equal(listed[0].total_sleep_minutes, 364);
   assert.ok(listed[0].total_sleep_minutes <= listed[0].in_bed_minutes);
+
+  services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    source: "apple_health_ios",
+    sleep_records: [{
+      externalId: "apple_health_sleep:2026-06-15:bad-stages",
+      sleepStart: "2026-06-15T16:40:59.000Z",
+      sleepEnd: "2026-06-16T01:02:29.000Z",
+      totalSleepMinutes: 591,
+      remMinutes: 139,
+      deepSleepMinutes: 42,
+      coreMinutes: 410,
+      awakeMinutes: 125,
+      inBedMinutes: 502
+    }]
+  });
+  const badStageRow = services.db.prepare("SELECT * FROM apple_health_sleep_records WHERE external_id = ?")
+    .get("apple_health_sleep:2026-06-15");
+  assert.equal(badStageRow.total_sleep_minutes, 377);
+  assert.equal(badStageRow.rem_minutes, null);
+  assert.equal(badStageRow.deep_sleep_minutes, null);
+  assert.equal(badStageRow.core_minutes, null);
 });
 
 test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists records", () => {
