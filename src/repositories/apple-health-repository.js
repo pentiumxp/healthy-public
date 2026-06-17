@@ -3,6 +3,7 @@ const { nowIso } = require("../utils/time");
 const { createAppleHealthEcgRepository } = require("./apple-health-ecg-repository");
 const { createAppleHealthSyncStateRepository } = require("./apple-health-sync-state-repository");
 const { createWorkoutHeartRateRepository } = require("./apple-health-workout-heart-rate-repository");
+const { bestStoredSleepRecord, collapseSleepRecords, sleepDayKey } = require("../utils/apple-health-sleep-records");
 function createAppleHealthRepository(db, { clock } = {}) {
   const ecgRepository = createAppleHealthEcgRepository(db, { clock });
   const syncStateRepository = createAppleHealthSyncStateRepository(db);
@@ -109,6 +110,9 @@ function createAppleHealthRepository(db, { clock } = {}) {
   function upsertSleepRecord(userId, record) {
     const now = nowIso(clock);
     const id = newId("ahs");
+    const existing = getByExternal("apple_health_sleep_records", userId, record.sourceType || "apple_health_sleep", record.externalId);
+    record = bestStoredSleepRecord([record, existing].filter(Boolean));
+    deleteSleepDuplicatesForDay(userId, record.sourceType || "apple_health_sleep", sleepDayKey(record), record.externalId);
     db.prepare(
       `INSERT INTO apple_health_sleep_records
        (id, user_id, external_id, sleep_start, sleep_end, total_sleep_minutes,
@@ -154,10 +158,12 @@ function createAppleHealthRepository(db, { clock } = {}) {
   }
 
   function listSleepRecords(userId, { limit = 14 } = {}) {
-    return db.prepare(
+    const boundedLimit = Math.max(1, Math.min(100, Number(limit) || 14));
+    const rows = db.prepare(
       `SELECT * FROM apple_health_sleep_records
        WHERE user_id = ? ORDER BY sleep_start DESC LIMIT ?`
-    ).all(userId, limit);
+    ).all(userId, boundedLimit * 4);
+    return collapseSleepRecords(rows, boundedLimit);
   }
 
   function listEcgRecords(userId, { limit = 14 } = {}) {
@@ -205,6 +211,14 @@ function createAppleHealthRepository(db, { clock } = {}) {
   function getByExternal(table, userId, sourceType, externalId) {
     return db.prepare(`SELECT * FROM ${table} WHERE user_id = ? AND source_type = ? AND external_id = ?`)
       .get(userId, sourceType, externalId);
+  }
+
+  function deleteSleepDuplicatesForDay(userId, sourceType, sleepDay, keepExternalId) {
+    db.prepare(
+      `DELETE FROM apple_health_sleep_records
+       WHERE user_id = ? AND source_type = ? AND external_id != ?
+        AND (external_id = ? OR external_id LIKE ?)`
+    ).run(userId, sourceType, keepExternalId, `apple_health_sleep:${sleepDay}`, `apple_health_sleep:${sleepDay}:%`);
   }
 
   return {

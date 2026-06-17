@@ -154,6 +154,51 @@ test("Apple Health repeated vitals are not rewritten when unchanged", () => {
   assert.equal(after.updated_at, before.updated_at);
 });
 
+test("Apple Health sleep sync keeps one self-consistent record per sleep day", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    source: "apple_health_ios",
+    sleep_records: [
+      {
+        externalId: "apple_health_sleep:2026-06-16:good-samples",
+        sleepStart: "2026-06-16T18:02:31.000Z",
+        sleepEnd: "2026-06-17T02:00:31.000Z",
+        totalSleepMinutes: 364,
+        remMinutes: 83,
+        deepSleepMinutes: 53,
+        coreMinutes: 228,
+        awakeMinutes: 114,
+        inBedMinutes: 478
+      },
+      {
+        externalId: "apple_health_sleep:2026-06-16:duplicated-samples",
+        sleepStart: "2026-06-16T18:02:31.000Z",
+        sleepEnd: "2026-06-17T02:45:01.000Z",
+        totalSleepMinutes: 669,
+        remMinutes: 167,
+        deepSleepMinutes: 105,
+        coreMinutes: 398,
+        awakeMinutes: 213,
+        inBedMinutes: 523
+      }
+    ]
+  });
+
+  const rows = services.db.prepare("SELECT * FROM apple_health_sleep_records").all();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].external_id, "apple_health_sleep:2026-06-16");
+  assert.equal(rows[0].total_sleep_minutes, 364);
+  assert.equal(rows[0].in_bed_minutes, 478);
+
+  const listed = services.appleHealthService.listSleepRecords({ workspaceRef: "health:weixin_test_1", limit: 5 }).records;
+  assert.equal(listed.length, 1);
+  assert.equal(listed[0].total_sleep_minutes, 364);
+  assert.ok(listed[0].total_sleep_minutes <= listed[0].in_bed_minutes);
+});
+
 test("Apple Health ECG normalizes Chinese Apple Watch classifications and lists records", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

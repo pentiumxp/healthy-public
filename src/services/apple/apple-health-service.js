@@ -8,6 +8,7 @@ const { createAppleListService } = require("./apple-list-service");
 const { decorateSyncState } = require("./sync-state-service");
 const { createMeasurementUpserter } = require("./measurement-upserter");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
+const { canonicalSleepRecord } = require("../../utils/apple-health-sleep-records");
 const ecgNormalizer = createEcgNormalizer({ boundedMetadata, externalId, inputError, integerOrNull, normalizeKey, numberOrNull, requireIsoDateTime });
 const workoutHeartRate = createWorkoutHeartRateNormalizer({ inputError, integerOrNull, numberOrNull, requireIsoDateTime });
 const METRIC_ALIASES = Object.freeze({
@@ -161,7 +162,7 @@ function normalizeWorkoutHeartRateSample(input, startedAt) { return workoutHeart
 function normalizeSleep(input) {
   const sleepStart = requireIsoDateTime(input.sleepStart ?? input.sleep_start, "sleepStart");
   const sleepEnd = input.sleepEnd || input.sleep_end ? requireIsoDateTime(input.sleepEnd ?? input.sleep_end, "sleepEnd") : null;
-  return {
+  return canonicalSleepRecord({
     externalId: externalId(input, `apple_health_sleep:${sleepEnd || sleepStart}`),
     sleepStart,
     sleepEnd,
@@ -176,7 +177,7 @@ function normalizeSleep(input) {
     sourceType: normalizeKey(input.sourceType || input.source_type || "apple_health_sleep"),
     metadata: boundedMetadata(input.metadata || input.metadata_json || input.sourceRevision || input.source_revision),
     notes: stringOrNull(input.notes)
-  };
+  });
 }
 
 function normalizeEcg(input) { return ecgNormalizer.normalizeEcg(input); }
