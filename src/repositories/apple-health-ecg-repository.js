@@ -34,7 +34,7 @@ function createAppleHealthEcgRepository(db, { clock } = {}) {
       record.sourceRef || null, JSON.stringify(record.metadata || {}), record.notes || null, now, now);
     const ecg = getByExternal(userId, record.sourceType || "apple_health_ecg", record.externalId);
     upsertVoltageSamples(userId, ecg, record.voltageSamples || [], now);
-    return attachSamples(ecg);
+    return getByExternal(userId, record.sourceType || "apple_health_ecg", record.externalId);
   }
 
   function listEcgRecords(userId, { limit = 14 } = {}) {
@@ -52,19 +52,18 @@ function createAppleHealthEcgRepository(db, { clock } = {}) {
   function upsertVoltageSamples(userId, ecg, samples, now) {
     if (!ecg || !samples.length) return;
     db.prepare("DELETE FROM apple_health_ecg_voltage_samples WHERE ecg_id = ?").run(ecg.id);
-    for (const sample of samples) upsertVoltageSample(userId, ecg.id, ecg.external_id, sample, now);
-  }
-
-  function upsertVoltageSample(userId, ecgId, ecgExternalId, sample, now) {
-    db.prepare(
+    const insert = db.prepare(
       `INSERT INTO apple_health_ecg_voltage_samples
        (id, user_id, ecg_id, external_id, sample_index, offset_ms, voltage_microvolts, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(ecg_id, sample_index) DO UPDATE SET
         external_id = excluded.external_id, offset_ms = excluded.offset_ms,
         voltage_microvolts = excluded.voltage_microvolts, updated_at = excluded.updated_at`
-    ).run(newId("ahev"), userId, ecgId, sample.externalId || `${ecgExternalId}:v:${sample.sampleIndex}`,
-      sample.sampleIndex, sample.offsetMs, sample.voltageMicrovolts, now, now);
+    );
+    for (const sample of samples) {
+      insert.run(newId("ahev"), userId, ecg.id, sample.externalId || `${ecg.external_id}:v:${sample.sampleIndex}`,
+        sample.sampleIndex, sample.offsetMs, sample.voltageMicrovolts, now, now);
+    }
   }
 
   function attachSamples(ecg) {

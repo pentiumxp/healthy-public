@@ -208,6 +208,29 @@ test("Apple Health ECG waveform samples are stored and returned plot-ready", () 
   ]);
 });
 
+test("Apple Health ECG bulk sync stores full Apple Watch waveform without echoing samples", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+  const voltages = Array.from({ length: 15360 }, (_, index) => index % 250);
+
+  const synced = services.appleHealthService.bulkSync({
+    workspaceRef: "health:weixin_test_1",
+    electrocardiograms: [{
+      externalId: "ecg-full-waveform-1",
+      recordedAt: "2026-06-15T07:10:00+08:00",
+      classification: "sinus rhythm",
+      samplingFrequencyHz: 512,
+      voltagesMicrovolts: voltages
+    }]
+  });
+
+  assert.deepEqual(synced.counts, { daily_summaries: 0, workouts: 0, sleep_records: 0, ecg_records: 1, body_measurements: 0, vitals: 0 });
+  const result = services.appleHealthService.getEcgRecord({ workspaceRef: "health:weixin_test_1", externalId: "ecg-full-waveform-1" });
+  assert.equal(result.record.voltage_measurement_count, 15360);
+  assert.equal(result.record.sample_count, 15360);
+  assert.equal(result.record.voltage_samples[15359].voltage_microvolts, 109);
+});
+
 test("Apple Health bulk sync coerces structured source metadata before SQLite bind", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");
