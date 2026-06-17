@@ -10,7 +10,6 @@
 
 - Profile 概览。
 - 力量训练趋势。
-- 有氧训练趋势。
 - 体重/体成分趋势。
 - 来源文件和待确认候选。
 - 数据质量提示。
@@ -23,7 +22,7 @@ Current first slice:
 
 The embedded UI reads `/api/v1/dashboard` through workspace-bound launch context and shows Profile, medications, strength training, body metrics, medical timeline priorities, and pending import candidate count. It does not read from the database directly and does not show a duplicate Hermes shell.
 
-Apple Health data is not duplicated as a full dashboard in Healthy. The UI shows only whether Apple Health has synced and leaves concrete native metrics such as steps, calories, sleep, and Apple workout summaries to Apple Health itself. Healthy stores those records for AI analysis and focuses the visible interface on complementary data: medications, medical timeline priorities, source-backed findings, and strength training.
+Apple Health data is not duplicated as a full dashboard in Healthy. The UI shows only whether Apple Health has synced and leaves concrete native metrics such as steps, calories, sleep, and Apple workout summaries to Apple Health itself. Healthy stores those records for AI analysis and focuses the visible interface on complementary data: medications, medical timeline priorities, source-backed findings, and strength training. Historical screenshot/cardio rows from Apple Fitness are not shown as a separate cardio panel because they duplicate HealthKit workout data after Apple Health sync is available.
 
 ## UI Boundary
 

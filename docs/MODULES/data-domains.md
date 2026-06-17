@@ -11,7 +11,7 @@
 - 用户 Profile。
 - 当前用药。
 - 力量训练。
-- 有氧训练。
+- Apple Health workout 长期保存；Healthy 页面不重复展示 Apple Fitness/Health 有氧面板。
 - 身体测量。
 - 体成分报告。
 - 来源文件和提取结果。

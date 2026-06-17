@@ -4,10 +4,10 @@
   const launch = params.get("launch") || "";
   const initialPluginRoute = String(params.get("pluginRoute") || params.get("route") || params.get("pluginActionId") || "").trim().toLowerCase();
   const labels = window.HealthLabels;
-  const state = { dashboard: null, strength: [], cardio: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null };
+  const state = { dashboard: null, strength: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null };
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
-    noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55", noCardio: "\u6682\u65e0\u6709\u6c27\u8bb0\u5f55",
+    noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55",
     pendingClear: "\u6ca1\u6709\u5f85\u786e\u8ba4\u7684\u5bfc\u5165\u5019\u9009",
     medicalEmpty: "\u6682\u65e0\u533b\u7597\u65f6\u95f4\u7ebf", labs: "\u5316\u9a8c",
     events: "\u4e8b\u4ef6", risks: "\u98ce\u9669", findings: "\u4e34\u5e8a\u53d1\u73b0",
@@ -25,9 +25,8 @@
     setText("workspaceLabel", `${t.workspace}\uff1a${workspaceId || t.unbound}`);
     if (!launch) return renderEmpty(t.noToken);
     try {
-      const [dashboard, strength, cardio, medications, risks, labs, events, findings, sleep] = await Promise.all([
+      const [dashboard, strength, medications, risks, labs, events, findings, sleep] = await Promise.all([
         fetchJson("/api/v1/dashboard"), fetchJson("/api/v1/strength/sessions"),
-        fetchJson("/api/v1/cardio/sessions"),
         fetchJson("/api/v1/profile/medications"),
         fetchJson("/api/v1/medical/risk-profiles"), fetchJson("/api/v1/medical/lab-results"),
         fetchJson("/api/v1/medical/clinical-events"), fetchJson("/api/v1/medical/clinical-findings"),
@@ -35,7 +34,6 @@
       ]);
       state.dashboard = dashboard;
       state.strength = strength.sessions || [];
-      state.cardio = cardio.sessions || [];
       state.medications = medications.medications || [];
       state.medical = { risks: risks.records || [], labs: labs.records || [], events: events.records || [], findings: findings.records || [], sleep: sleep.records || [] };
       renderHome();
@@ -65,12 +63,9 @@
     setText("medicationCount", String(data.medications?.activeCount || 0));
     setText("weeklyVolume", `${data.strength.weeklyVolumeKg || 0} kg`);
     setText("latestStrength", data.strength.latestSession ? fmtDate(data.strength.latestSession.started_at) : t.noStrength);
-    setText("latestCardio", data.cardio?.latestSession ? fmtDate(data.cardio.latestSession.started_at) : t.noCardio);
-    setText("cardioDistance", `${data.cardio?.totalDistanceKm || 0} km`);
     renderBars(data.strength.chart || []);
     window.HealthApple.render(data.appleHealth || {});
     window.HealthStrength.renderList(state.strength, { labels, empty: t.noStrength, openDetail, appendText, appendSection });
-    window.HealthCardio.renderList(state.cardio, { labels, empty: t.noCardio, openDetail, appendText, appendSection });
     renderMetric("weightMetric", "weightTrend", data.body.latest.weight);
     renderMetric("fatMetric", "fatTrend", data.body.latest.body_fat_percentage);
     renderMetric("waistMetric", "waistTrend", data.body.latest.waist_circumference);

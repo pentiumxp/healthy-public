@@ -46,15 +46,16 @@ test("embedded UI serves Chinese display label script", async () => {
     await new Promise((resolve) => server.close(resolve));
   }
 });
-test("embedded UI serves cardio module script", async () => {
+test("embedded UI does not render manual cardio section", async () => {
   const server = createServer(createTestServices());
   await listen(server);
   const base = `http://127.0.0.1:${server.address().port}`;
   try {
-    const response = await fetch(`${base}/health-cardio.js`);
+    const response = await fetch(`${base}/health.html`);
     const text = await response.text();
     assert.equal(response.status, 200);
-    assert.match(text, /HealthCardio/);
+    assert.doesNotMatch(text, /cardioList|latestCardio|health-cardio\.js/);
+    assert.match(text, /Apple Health/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
