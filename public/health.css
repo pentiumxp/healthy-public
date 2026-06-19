@@ -137,6 +137,13 @@ strong {
 }
 .apple-status strong { margin: 0 0 6px; font-size: 16px; color: var(--accent); }
 .apple-status span { display: block; line-height: 1.35; }
+.apple-sync-times {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
 .medical-item, .detail-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

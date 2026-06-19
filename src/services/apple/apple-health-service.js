@@ -91,7 +91,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     const workouts = appleHealthRepository.listWorkouts(user.id, { limit: 8 });
     const sleep = appleHealthRepository.listSleepRecords(user.id, { limit: 8 });
     const ecg = appleHealthRepository.listEcgRecords(user.id, { limit: 8 });
-    return { latestDaily: daily[0] || null, daily, workouts, latestSleep: sleep[0] || null, sleep, latestEcg: ecg[0] || null, ecg };
+    return { latestDaily: daily[0] || null, daily, workouts, latestSleep: sleep[0] || null, sleep, latestEcg: ecg[0] || null, ecg, syncState: getSyncState({ workspaceRef: user.workspace_ref }).domains };
   }
 
   function recordMeasurements(workspaceRef, records, kind) {
