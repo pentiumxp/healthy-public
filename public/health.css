@@ -38,7 +38,8 @@ body {
 .shell {
   min-height: 100vh;
   width: 100%;
-  max-width: 390px;
+  max-width: 720px;
+  margin: 0 auto;
   padding: calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
 }
 .topbar, .panel-head {
@@ -205,4 +206,10 @@ button {
     --accent-soft: #dcefeb;
     --list-bg: #f9fbfa;
   }
+}
+
+@media (min-width: 700px) {
+  .shell { padding-left: 24px; padding-right: 24px; }
+  .profile-grid, .body-grid { gap: 12px; }
+  .panel { margin-top: 12px; }
 }

@@ -14,6 +14,9 @@ test("health theme CSS exposes Finance-style dark default with light and system 
   assert.match(css, /prefers-color-scheme: light/);
   assert.match(css, /:root\[data-theme="system"\]/);
   assert.match(css, /data-plugin-font-size="large"/);
+  assert.match(css, /\.shell\s*\{[\s\S]*?max-width: 720px;[\s\S]*?margin: 0 auto;/);
+  assert.match(css, /@media \(min-width: 700px\)/);
+  assert.doesNotMatch(css, /max-width: 390px/);
 });
 
 test("health theme module applies host appearance and updates meta theme color", () => {
