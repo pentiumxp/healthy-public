@@ -52,6 +52,7 @@ test("health HTML and theme module are available without launch", async () => {
     assert.match(html, /data-theme="dark"/);
     assert.match(html, /localStorage\.getItem\("hermesWebTheme"\)/);
     assert.match(html, /meta name="theme-color" content="#000000"/);
+    assert.doesNotMatch(html, /pendingText|refreshButton|review|待确认数据/);
 
     const themeResponse = await fetch(`${base}/health-theme.js`);
     const themeJs = await themeResponse.text();

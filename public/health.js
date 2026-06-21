@@ -8,7 +8,6 @@
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
     noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55",
-    pendingClear: "\u6ca1\u6709\u5f85\u786e\u8ba4\u7684\u5bfc\u5165\u5019\u9009",
     medicalEmpty: "\u6682\u65e0\u533b\u7597\u65f6\u95f4\u7ebf", labs: "\u5316\u9a8c",
     events: "\u4e8b\u4ef6", risks: "\u98ce\u9669", findings: "\u4e34\u5e8a\u53d1\u73b0",
     sleep: "\u7761\u7720\u6062\u590d", riskHistory: "\u95ee\u9898\u8bc4\u4f30\u5386\u53f2",
@@ -16,7 +15,6 @@
     relatedFindings: "\u76f8\u5173\u53d1\u73b0", setDetails: "\u8bad\u7ec3\u660e\u7ec6",
     medicationList: "\u5f53\u524d\u7528\u836f", noMedication: "\u6682\u65e0\u7528\u836f\u8bb0\u5f55"
   };
-  document.getElementById("refreshButton").addEventListener("click", load);
   document.getElementById("backButton").addEventListener("click", goBack);
   document.getElementById("medicationButton").addEventListener("click", renderMedicationList);
   window.addEventListener("message", handleHostMessage);
@@ -70,7 +68,6 @@
     renderMetric("fatMetric", "fatTrend", data.body.latest.body_fat_percentage);
     renderMetric("waistMetric", "waistTrend", data.body.latest.waist_circumference);
     renderMedicalList();
-    setText("pendingText", data.pendingReview ? `${data.pendingReview} \u6761\u5bfc\u5165\u5019\u9009\u7b49\u5f85\u786e\u8ba4` : t.pendingClear);
     postNavigation(false);
   }
   function renderMedicalList() {
