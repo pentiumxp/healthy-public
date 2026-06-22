@@ -18,7 +18,7 @@ const FORBIDDEN_ARGS = new Set([
 ]);
 
 const TOOLS = [
-  tool("mcp_health_records_get_summary", "Return a bounded summary for the configured workspace.", {}),
+  tool("mcp_health_records_get_summary", "Return a bounded summary for the configured workspace. Cardio/aerobic totals include Apple Health workouts plus any legacy manual cardio sessions.", {}),
   tool("mcp_health_profile_get", "Return the configured workspace profile.", {}),
   tool("mcp_health_profile_update", "Create or update profile fields for the configured workspace.", {
     birthDate: stringProp(),
@@ -222,6 +222,8 @@ function summarizeDashboard(data) {
     summary: {
       strength_sessions: data.strength && data.strength.sessionCount,
       weekly_volume_kg: data.strength && data.strength.weeklyVolumeKg,
+      cardio: data.cardio,
+      aerobic: data.cardio,
       apple_health: data.appleHealth,
       latest_body_metrics: data.body && data.body.latest,
       pending_review: data.pendingReview

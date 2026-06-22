@@ -99,6 +99,17 @@ test("Apple Health daily summaries and workouts are long-term upserts in dashboa
     { sampled_at: "2026-06-15T11:10:00.000Z", heart_rate_bpm: 121 },
     { sampled_at: "2026-06-15T11:20:00.000Z", heart_rate_bpm: 141 }
   ]);
+  assert.equal(dashboard.cardio.sessionCount, 2);
+  assert.equal(dashboard.cardio.manualSessionCount, 0);
+  assert.equal(dashboard.cardio.appleHealthWorkoutCount, 2);
+  assert.deepEqual(dashboard.cardio.sourceCounts, { manual_cardio_sessions: 0, apple_health_workouts: 2 });
+  assert.equal(dashboard.cardio.totalDistanceKm, 2.4);
+  assert.equal(dashboard.cardio.totalDurationMinutes, 75);
+  assert.equal(dashboard.cardio.latestSession.record_domain, "apple_health_workout");
+  assert.equal(dashboard.cardio.latestSession.elevation_gain_m, 190);
+  assert.equal(dashboard.cardio.latestSession.source_name, "Technogym");
+  assert.equal(dashboard.cardio.latestSession.device_manufacturer, "Technogym");
+  assert.equal(dashboard.cardio.latestSession.average_heart_rate_bpm, 118);
   assert.equal(dashboard.appleHealth.latestSleep.total_sleep_minutes, 450);
   assert.equal(dashboard.appleHealth.latestEcg.classification, "sinus_rhythm");
   assert.equal(dashboard.appleHealth.latestEcg.average_heart_rate_bpm, 62);

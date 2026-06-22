@@ -184,6 +184,13 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
     const summary = await mcpCall(workspace, "mcp_health_records_get_summary", {});
     assert.equal(summary.workspace_id, "health:weixin_test_1");
     assert.equal(summary.summary.strength_sessions, 1);
+    assert.equal(summary.summary.cardio.sessionCount, 2);
+    assert.equal(summary.summary.cardio.manualSessionCount, 1);
+    assert.equal(summary.summary.cardio.appleHealthWorkoutCount, 1);
+    assert.deepEqual(summary.summary.aerobic.sourceCounts, { manual_cardio_sessions: 1, apple_health_workouts: 1 });
+    assert.equal(summary.summary.cardio.latestSession.record_domain, "apple_health_workout");
+    assert.equal(summary.summary.cardio.latestSession.elevation_gain_m, 190);
+    assert.equal(summary.summary.cardio.latestSession.source_name, "Technogym");
     assert.equal(summary.summary.apple_health.latestDaily.step_count, 10200);
     assert.equal(summary.summary.apple_health.latestEcg.classification, "sinus_rhythm");
     assert.equal(summary.summary.latest_body_metrics.weight.value, 80.5);

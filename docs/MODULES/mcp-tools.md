@@ -72,6 +72,10 @@ Healthy 的 canonical catalog。
 - 服务端可接受已登记 alias，例如 `室内步行`、`跑步机步行`、
   `Technogym walk`，并归一为 `indoor_walk`。
 - 未命中 catalog/alias 时返回 `unsupported_activity_type`。
+- 周报、摘要和自然语言“有氧/cardio/aerobic”统计必须同时读取
+  `cardio_sessions` 和 Apple Health `apple_health_workouts`。用户佩戴
+  Apple Watch 完成的有氧训练以 Apple Health workout 为准，不要求再写一份
+  手工 cardio session。
 
 Apple Health：
 
@@ -106,6 +110,9 @@ Apple Health：
 - Workout 来源/设备信息支持 `sourceName`、`sourceBundleIdentifier`、
   `deviceName`、`deviceManufacturer`、`deviceModel`，用于暴露 Technogym
   等 Apple Health connected device/source。
+- 同一 Apple Health workout 的增量 upsert 如果只补传心率样本或部分字段，
+  服务端保留已有的距离、能量、平均心率、爬升和来源/设备明细，避免周报或
+  MCP 摘要把已同步明细回退为空。
 - Owner 的 Apple Health 清洗导出 workout CSV 没有训练期间心率曲线；训练心率图
   需要 iOS 壳按 workout 时间窗读取 HealthKit heart-rate samples 后写入。
 - 睡眠同步长期保存到 `apple_health_sleep_records`；人工或非 Apple
