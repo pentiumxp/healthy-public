@@ -1,6 +1,6 @@
 # Home AI Platform Contract Pointer
 
-Last updated: 2026-06-11.
+Last updated: 2026-06-23.
 Home AI platform contract version: `20260618-v4`.
 
 ## Scope
@@ -14,6 +14,11 @@ facts and points back to the canonical Home AI platform contract.
 Read these Home AI docs before changing deployment, MCP tools, mobile visual
 behavior, or cross-plugin reference behavior:
 
+- `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/root-cause-architecture-contract.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/fallback-governance-contract.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/fallback-registry.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/MODULES/ai-operations-control-plane.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/ai-operations-control-plane.md`
 - `C:\Users\xuxin\Documents\Agent\docs\PLATFORM_CONTRACTS\plugin-workspace-platform-contract.md`
 - `C:\Users\xuxin\Documents\Agent\docs\PLATFORM_CONTRACTS\plugin-mobile-ui-visual-contract.md`
 - `C:\Users\xuxin\Documents\Agent\docs\RUNBOOKS\macos-production-access.md`
