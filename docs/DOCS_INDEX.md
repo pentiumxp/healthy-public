@@ -40,6 +40,7 @@
 ## 当前优先 Runbooks
 
 - Runbook 目录入口: `docs/RUNBOOKS/README.md`
+- Apple Health 清洗导出导入: `docs/RUNBOOKS/apple-health-export-import.md`
 
 ## 更新规则
 

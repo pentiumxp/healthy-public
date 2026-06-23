@@ -1,13 +1,18 @@
 # Home AI Platform Contract Pointer
 
 Last updated: 2026-06-23.
-Home AI platform contract version: `20260618-v4`.
+Home AI platform contract version: `20260623-v5`.
 
 ## Scope
 
 Health is a standard inserted Home AI plugin. It owns structured health facts,
 health UI, and bounded MCP health tools. This file records only Health-local
 facts and points back to the canonical Home AI platform contract.
+
+Naming note: `health` is the stable Home AI plugin id used by manifest,
+checker, MCP toolset, deploy routing, and task-card ownership. `healthy` is the
+repository/workspace directory name. Contract checks and deploy commands should
+use plugin id `health` unless a command explicitly asks for the directory name.
 
 ## Canonical Home AI Docs
 
@@ -16,6 +21,7 @@ behavior, or cross-plugin reference behavior:
 
 - `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/root-cause-architecture-contract.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/fallback-governance-contract.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/macos-dev-to-production-deployment-contract.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/fallback-registry.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/MODULES/ai-operations-control-plane.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/ai-operations-control-plane.md`

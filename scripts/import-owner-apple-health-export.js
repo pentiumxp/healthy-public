@@ -7,14 +7,12 @@ const { DatabaseSync } = require("node:sqlite");
 const { applyMigrations } = require("../src/db/client");
 const { normalizeEcgClassification } = require("../src/services/apple/ecg-classification");
 
-const DEFAULT_SOURCE = "/Users/xuxin/HermesMobile/data/drive/users/owner/Hermes-徐欣/健身，健康/苹果健康";
-const DEFAULT_DB = "/Users/hermes-host/HermesMobile/plugins/healthy/data/healthy.sqlite";
-
 function main(argv = process.argv.slice(2)) {
   const args = parseArgs(argv);
-  const dbPath = args.db || DEFAULT_DB;
-  const source = args.source || DEFAULT_SOURCE;
-  const workspace = args.workspace || "health:owner";
+  const options = resolveOptions(args);
+  const dbPath = options.db;
+  const source = options.source;
+  const workspace = options.workspace;
   const db = new DatabaseSync(dbPath);
   applyMigrations(db);
   const user = db.prepare("SELECT id FROM users WHERE workspace_ref = ?").get(workspace);
@@ -30,16 +28,38 @@ function main(argv = process.argv.slice(2)) {
     importObservations(context);
     importFileInventory(context);
     importRoutePoints(context);
-    if (args.dryRun) db.exec("ROLLBACK"); else db.exec("COMMIT");
+    if (options.dryRun) db.exec("ROLLBACK"); else db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
     throw error;
   } finally {
     db.close();
   }
-  const summary = { ok: true, dryRun: Boolean(args.dryRun), workspace, dbPath, source, stats: context.stats };
+  const summary = {
+    ok: true,
+    dryRun: options.dryRun,
+    workspace,
+    inputs: { db: "provided", source: "provided" },
+    stats: context.stats
+  };
   console.log(JSON.stringify(summary, null, 2));
   return summary;
+}
+
+function resolveOptions(args) {
+  const missing = ["db", "source", "workspace"].filter((key) => !args[key]);
+  if (missing.length) throw new Error(`missing required argument(s): ${missing.map((key) => `--${key}`).join(", ")}`);
+  if (args.dryRun && args.execute) throw new Error("--dry-run and --execute are mutually exclusive");
+  const dryRun = !args.execute;
+  if (args.execute && !args.confirmWrite) {
+    throw new Error("writes require --execute and --confirm-write");
+  }
+  return {
+    db: args.db,
+    source: args.source,
+    workspace: args.workspace,
+    dryRun
+  };
 }
 
 function importDailySummaries(context) {
@@ -365,6 +385,8 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--dry-run") out.dryRun = true;
+    else if (arg === "--execute") out.execute = true;
+    else if (arg === "--confirm-write") out.confirmWrite = true;
     else if (arg === "--skip-ecg-waveforms") out.skipEcgWaveforms = true;
     else if (arg === "--skip-route-points") out.skipRoutePoints = true;
     else if (arg.startsWith("--")) out[arg.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = argv[++i];
@@ -402,4 +424,4 @@ function parseAppleDate(value) {
 }
 
 if (require.main === module) main();
-module.exports = { main, parseCsv, parseAppleDate };
+module.exports = { main, parseArgs, parseCsv, parseAppleDate, resolveOptions };

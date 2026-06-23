@@ -4,7 +4,7 @@
   const launch = params.get("launch") || "";
   const initialPluginRoute = String(params.get("pluginRoute") || params.get("route") || params.get("pluginActionId") || "").trim().toLowerCase();
   const labels = window.HealthLabels;
-  const state = { dashboard: null, strength: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null };
+  const state = { dashboard: null, strength: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null, refreshRequiredPosted: false };
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
     noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55",
@@ -21,7 +21,10 @@
   load();
   async function load() {
     setText("workspaceLabel", `${t.workspace}\uff1a${workspaceId || t.unbound}`);
-    if (!launch) return renderEmpty(t.noToken);
+    if (!launch) {
+      postRefreshRequired("missing_launch_token");
+      return renderEmpty(t.noToken);
+    }
     try {
       const [dashboard, strength, medications, risks, labs, events, findings, sleep] = await Promise.all([
         fetchJson("/api/v1/dashboard"), fetchJson("/api/v1/strength/sessions"),
@@ -45,7 +48,13 @@
     if (workspaceId) query.set("workspace_id", workspaceId);
     const response = await fetch(`${path}?${query.toString()}`);
     const data = await response.json();
-    if (!response.ok || data.ok === false) throw new Error(data.error?.message || "load failed");
+    if (!response.ok || data.ok === false) {
+      const code = data.error?.code || data.error?.message || "";
+      if (response.status === 401 || response.status === 403 || /token|launch|auth/i.test(code)) {
+        postRefreshRequired(code === "launch_token_expired" ? "token_expired" : "auth_failed");
+      }
+      throw new Error(data.error?.message || "load failed");
+    }
     return data;
   }
   function renderHome() {
@@ -247,5 +256,10 @@
   }
 
   function postNavigation(canGoBack) { window.parent.postMessage({ type: "health.plugin.navigation", canGoBack, route: location.pathname }, "*"); }
+  function postRefreshRequired(reason) {
+    if (state.refreshRequiredPosted) return;
+    state.refreshRequiredPosted = true;
+    window.parent.postMessage({ type: "health.plugin.refresh_required", reason }, "*");
+  }
   function setText(id, text) { document.getElementById(id).textContent = text; }
 })();
