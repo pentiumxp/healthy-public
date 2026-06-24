@@ -16,6 +16,9 @@ test("health theme CSS exposes Finance-style dark default with light and system 
   assert.match(css, /data-plugin-font-size="large"/);
   assert.match(css, /\.shell\s*\{[\s\S]*?max-width: 720px;[\s\S]*?margin: 0 auto;/);
   assert.match(css, /@media \(min-width: 700px\)/);
+  assert.match(css, /\.health-composer\s*\{[\s\S]*?position: fixed;[\s\S]*?bottom: var\(--health-composer-bottom\);/);
+  assert.match(css, /\.health-composer textarea\s*\{[\s\S]*?min-height: 40px;/);
+  assert.match(css, /--health-composer-reserve: 78px/);
   assert.doesNotMatch(css, /max-width: 390px/);
 });
 

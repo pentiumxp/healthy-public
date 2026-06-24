@@ -4,7 +4,7 @@
   const launch = params.get("launch") || "";
   const initialPluginRoute = String(params.get("pluginRoute") || params.get("route") || params.get("pluginActionId") || "").trim().toLowerCase();
   const labels = window.HealthLabels;
-  const state = { dashboard: null, strength: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null, refreshRequiredPosted: false };
+  const state = { dashboard: null, strength: [], medications: [], medical: {}, view: "home", pluginRouteApplied: false, detailBack: null, refreshRequiredPosted: false, pluginHostViewport: null };
   const t = {
     app: "\u5065\u5eb7", workspace: "\u5de5\u4f5c\u533a", unbound: "\u672a\u7ed1\u5b9a",
     noToken: "\u7f3a\u5c11 launch token", noStrength: "\u6682\u65e0\u8bad\u7ec3\u8bb0\u5f55",
@@ -22,6 +22,8 @@
   };
   document.getElementById("backButton").addEventListener("click", goBack);
   document.getElementById("medicationButton").addEventListener("click", renderMedicationList);
+  document.getElementById("composer").addEventListener("submit", handleComposerSubmit);
+  installVisualHarness();
   window.addEventListener("message", handleHostMessage);
   load();
   async function load() {
@@ -295,10 +297,52 @@
       window.HealthTheme.applyTheme(message.theme);
       if (message.fontSize) window.HealthTheme.applyPluginFontSize(message.fontSize);
     }
+    if (message.type === "hermes.plugin.viewport") handleHermesPluginViewportMessage(message);
     if (message.type === "hermes.plugin.back") {
       const handled = state.view === "detail";
       if (handled) goBack(); window.parent.postMessage({ type: "health.plugin.back_result", handled }, "*");
     }
+  }
+
+  function handleComposerSubmit(event) {
+    event.preventDefault();
+    document.getElementById("messageInput").blur();
+  }
+
+  function handleHermesPluginViewportMessage(message) {
+    const keyboard = message?.keyboard || {};
+    const viewport = message?.viewport || {};
+    const bottomInset = Math.max(0, Math.round(Number(keyboard.bottomInset || keyboard.height || 0) || 0));
+    const keyboardVisible = Boolean(keyboard.visible || bottomInset > 0);
+    state.pluginHostViewport = {
+      reason: String(message?.reason || ""),
+      viewport,
+      keyboard: {
+        visible: keyboardVisible,
+        bottomInset,
+        height: Math.max(0, Math.round(Number(keyboard.height || bottomInset) || 0)),
+        offsetTop: Math.max(0, Math.round(Number(keyboard.offsetTop || 0) || 0))
+      }
+    };
+    document.documentElement.classList.toggle("keyboard-open", keyboardVisible);
+    if (keyboardVisible) {
+      document.documentElement.style.setProperty("--health-composer-bottom", `${bottomInset}px`);
+      if (viewport.height) document.documentElement.style.setProperty("--app-height", `${Math.max(0, Math.round(Number(viewport.height) || 0))}px`);
+      document.documentElement.style.setProperty("--host-bottom-safe-area", `${Math.max(0, Math.round(Number(message?.footer?.safeAreaBottom || 0) || 0))}px`);
+    } else {
+      document.documentElement.style.setProperty("--health-composer-bottom", "0px");
+      document.documentElement.style.removeProperty("--app-height");
+      document.documentElement.style.removeProperty("--host-bottom-safe-area");
+    }
+  }
+
+  function installVisualHarness() {
+    window.handleHermesPluginViewportMessage = handleHermesPluginViewportMessage;
+    window.__codexMobileVisualHarness = {
+      clientBuildId: () => "health-20260625-1",
+      currentThreadId: () => "health-plugin",
+      hostViewport: () => state.pluginHostViewport
+    };
   }
 
   function postNavigation(canGoBack) { window.parent.postMessage({ type: "health.plugin.navigation", canGoBack, route: location.pathname }, "*"); }

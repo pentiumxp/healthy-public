@@ -75,10 +75,15 @@
 
       <section class="detail hidden" id="detailView"></section>
     </main>
+    <form class="composer health-composer" id="composer" aria-label="健康数据输入">
+      <button type="button" class="composer-tool" aria-label="健康数据">⌁</button>
+      <textarea id="messageInput" data-keyboard-input rows="1" autocomplete="off" autocapitalize="sentences" placeholder="询问健康数据"></textarea>
+      <button type="submit" class="composer-send" id="composerSubmit">发送</button>
+    </form>
     <script src="/health-labels.js?v=20260604-2"></script>
     <script src="/health-apple.js?v=20260619-1"></script>
     <script src="/health-theme.js?v=20260604-1"></script>
     <script src="/health-strength.js?v=20260604-1"></script>
-    <script src="/health.js?v=20260604-2"></script>
+    <script src="/health.js?v=20260625-1"></script>
   </body>
 </html>

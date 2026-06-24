@@ -47,6 +47,25 @@ or workout write forms, report generation, or AI advice workflows, the manifest
 labels, route implementation, product requirements, and executable route tests
 must be updated together.
 
+## Embedded Keyboard Composer
+
+Healthy exposes a compact iframe-local composer with `id="composer"` and
+`id="messageInput"` so Home AI mobile keyboard and visual harness flows can
+focus a plugin-owned input. This composer is a UI input surface only; it does
+not change Healthy data persistence or create a separate report/advice workflow.
+
+Healthy accepts the host viewport message:
+
+```json
+{ "type": "hermes.plugin.viewport", "keyboard": { "visible": true, "bottomInset": 300 } }
+```
+
+When the keyboard is visible, the UI adds `keyboard-open`, sets
+`--health-composer-bottom`, and exposes bounded viewport state through
+`window.__codexMobileVisualHarness.hostViewport()` for visual validation. The
+message handler must not include launch tokens, raw health data, medication
+details, or user draft text in postMessage payloads.
+
 ## UI Boundary
 
 UI 可以：

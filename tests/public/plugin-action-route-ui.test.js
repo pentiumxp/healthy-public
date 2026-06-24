@@ -63,6 +63,34 @@ test("health UI host back message returns action route detail to home", async ()
   assert.equal(sandbox.document.getElementById("pageTitle").textContent, "\u5065\u5eb7");
 });
 
+test("health UI accepts host keyboard viewport state for embedded composer", async () => {
+  const sandbox = runHealthUi({
+    search: "?launch=launch-test&workspace_id=health:test",
+    fetchJson: successPayloads({ empty: false })
+  });
+  await flushAsync();
+
+  sandbox.dispatchMessage({
+    type: "hermes.plugin.viewport",
+    reason: "keyboard_visual_harness",
+    viewport: { height: 414, layoutHeight: 714 },
+    keyboard: { visible: true, bottomInset: 300, height: 300 },
+    footer: { safeAreaBottom: 0 }
+  });
+
+  assert.equal(typeof sandbox.window.handleHermesPluginViewportMessage, "function");
+  assert.equal(sandbox.document.documentElement.classList.has("keyboard-open"), true);
+  assert.equal(sandbox.document.documentElement.style.getPropertyValue("--health-composer-bottom"), "300px");
+  assert.equal(sandbox.document.documentElement.style.getPropertyValue("--app-height"), "414px");
+  assert.deepEqual(plain(sandbox.window.__codexMobileVisualHarness.hostViewport().keyboard), {
+    visible: true,
+    bottomInset: 300,
+    height: 300,
+    offsetTop: 0
+  });
+  assert.equal(sandbox.window.__codexMobileVisualHarness.currentThreadId(), "health-plugin");
+});
+
 test("health UI emits refresh_required when launch token is missing", async () => {
   const sandbox = runHealthUi({ search: "?workspace_id=health:test", fetchJson: successPayloads() });
   await flushAsync();
@@ -160,12 +188,14 @@ function createDocument() {
     "homeView", "detailView", "pageTitle", "heightValue", "targetWeightValue",
     "medicationCount", "weeklyVolume", "strengthChart", "medicalCounts",
     "medicalList", "weightMetric", "fatMetric", "waistMetric", "weightTrend",
-    "fatTrend", "waistTrend"
+    "fatTrend", "waistTrend", "composer", "messageInput", "composerSubmit"
   ];
   const elements = new Map(ids.map((id) => [id, new FakeElement("div")]));
   elements.get("backButton").classList.add("hidden");
   elements.get("detailView").classList.add("hidden");
+  const documentElement = new FakeElement("html");
   return {
+    documentElement,
     getElementById: (id) => {
       if (!elements.has(id)) elements.set(id, new FakeElement("div"));
       return elements.get(id);
@@ -182,7 +212,7 @@ class FakeElement {
     this.textContent = "";
     this.type = "";
     this.className = "";
-    this.style = {};
+    this.style = new FakeStyle();
     this.classList = new FakeClassList();
   }
 
@@ -216,7 +246,31 @@ class FakeClassList {
 
   add(value) { this.values.add(value); }
   remove(value) { this.values.delete(value); }
+  toggle(value, force) {
+    const next = force === undefined ? !this.values.has(value) : Boolean(force);
+    if (next) this.values.add(value);
+    else this.values.delete(value);
+    return next;
+  }
   has(value) { return this.values.has(value); }
+}
+
+class FakeStyle {
+  constructor() {
+    this.values = new Map();
+  }
+
+  setProperty(name, value) {
+    this.values.set(name, String(value));
+  }
+
+  getPropertyValue(name) {
+    return this.values.get(name) || "";
+  }
+
+  removeProperty(name) {
+    this.values.delete(name);
+  }
 }
 
 function flushAsync() {
