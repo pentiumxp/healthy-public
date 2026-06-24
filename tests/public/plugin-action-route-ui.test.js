@@ -6,16 +6,57 @@ const vm = require("node:vm");
 
 const PUBLIC_DIR = path.join(__dirname, "..", "..", "public");
 
-test("health UI executes host plugin action routes and posts navigation state", async () => {
+test("health UI executes every host plugin action route with data-present states", async () => {
+  const cases = [
+    ["record_metric", "\u8eab\u4f53\u6307\u6807", "\u4f53\u91cd"],
+    ["trend", "\u8d8b\u52bf", "\u529b\u91cf\u8bad\u7ec3"],
+    ["workout", "\u529b\u91cf\u8bad\u7ec3", "\u8bad\u7ec3\u660e\u7ec6"],
+    ["report", "\u5065\u5eb7\u6982\u89c8", "Synthetic risk"],
+    ["medication", "\u5f53\u524d\u7528\u836f", "Synthetic medication"],
+    ["advice", "\u5065\u5eb7\u91cd\u70b9", "Synthetic risk"]
+  ];
+  for (const [route, title, expectedText] of cases) {
+    const sandbox = runHealthUi({
+      search: `?launch=launch-test&workspace_id=health:test&pluginRoute=${route}`,
+      fetchJson: successPayloads({ empty: false })
+    });
+    await flushAsync();
+
+    assert.equal(sandbox.document.getElementById("pageTitle").textContent, title, route);
+    assert.equal(sandbox.document.getElementById("detailView").classList.has("hidden"), false, route);
+    assert.match(collectText(sandbox.document.getElementById("detailView")), new RegExp(expectedText), route);
+    assert.ok(sandbox.messages.some((message) => message.type === "health.plugin.navigation" && message.canGoBack === true), route);
+  }
+});
+
+test("health UI renders explicit empty states for every host plugin action route", async () => {
+  const cases = [
+    ["record_metric", "\u8eab\u4f53\u6307\u6807", "\u6682\u65e0\u8eab\u4f53\u6307\u6807"],
+    ["trend", "\u8d8b\u52bf", "\u6682\u65e0\u8d8b\u52bf\u6570\u636e"],
+    ["workout", "\u529b\u91cf\u8bad\u7ec3", "\u6682\u65e0\u529b\u91cf\u8bad\u7ec3\u8bb0\u5f55"],
+    ["report", "\u5065\u5eb7\u6982\u89c8", "\u6682\u65e0\u533b\u7597\u65f6\u95f4\u7ebf"],
+    ["medication", "\u5f53\u524d\u7528\u836f", "\u6682\u65e0\u7528\u836f\u8bb0\u5f55"],
+    ["advice", "\u5065\u5eb7\u91cd\u70b9", "\u6682\u65e0\u5065\u5eb7\u91cd\u70b9"]
+  ];
+  for (const [route, title, expectedText] of cases) {
+    const sandbox = runHealthUi({
+      search: `?launch=launch-test&workspace_id=health:test&pluginRoute=${route}`,
+      fetchJson: successPayloads({ empty: true })
+    });
+    await flushAsync();
+
+    assert.equal(sandbox.document.getElementById("pageTitle").textContent, title, route);
+    assert.equal(sandbox.document.getElementById("detailView").classList.has("hidden"), false, route);
+    assert.match(collectText(sandbox.document.getElementById("detailView")), new RegExp(expectedText), route);
+  }
+});
+
+test("health UI host back message returns action route detail to home", async () => {
   const sandbox = runHealthUi({
     search: "?launch=launch-test&workspace_id=health:test&pluginRoute=medication",
-    fetchJson: successPayloads()
+    fetchJson: successPayloads({ empty: false })
   });
   await flushAsync();
-
-  assert.equal(sandbox.document.getElementById("pageTitle").textContent, "\u5f53\u524d\u7528\u836f");
-  assert.equal(sandbox.document.getElementById("detailView").classList.has("hidden"), false);
-  assert.ok(sandbox.messages.some((message) => message.type === "health.plugin.navigation" && message.canGoBack === true));
 
   sandbox.dispatchMessage({ type: "hermes.plugin.back" });
   assert.ok(sandbox.messages.some((message) => message.type === "health.plugin.back_result" && message.handled === true));
@@ -78,22 +119,22 @@ function runHealthUi({ search, fetchJson }) {
   return sandbox;
 }
 
-function successPayloads() {
+function successPayloads({ empty = false } = {}) {
   const payloads = {
     "/api/v1/dashboard": {
       workspace: { id: "health:test", hermesWorkspaceId: "test" },
       profile: {},
       medications: { activeCount: 1 },
-      strength: { weeklyVolumeKg: 0, chart: [] },
+      strength: { weeklyVolumeKg: empty ? 0 : 1200, chart: [] },
       appleHealth: {},
-      body: { latest: {} },
+      body: { latest: empty ? {} : { weight: { value: 72.5, unit: "kg", measured_at: "2026-06-01" } } },
       medical: { counts: {} }
     },
-    "/api/v1/strength/sessions": { sessions: [] },
-    "/api/v1/profile/medications": { medications: [{ name: "Synthetic", status: "active" }] },
-    "/api/v1/medical/risk-profiles": { records: [] },
-    "/api/v1/medical/lab-results": { records: [] },
-    "/api/v1/medical/clinical-events": { records: [] },
+    "/api/v1/strength/sessions": { sessions: empty ? [] : [{ started_at: "2026-06-01T12:00:00.000Z", source_type: "manual", sets: [] }] },
+    "/api/v1/profile/medications": { medications: empty ? [] : [{ name: "Synthetic medication", status: "active" }] },
+    "/api/v1/medical/risk-profiles": { records: empty ? [] : [{ risk_key: "synthetic", label: "Synthetic risk", status: "active", priority: 1 }] },
+    "/api/v1/medical/lab-results": { records: empty ? [] : [{ test_name: "Synthetic lab", value: 1, unit: "u", observed_at: "2026-06-01" }] },
+    "/api/v1/medical/clinical-events": { records: empty ? [] : [{ title: "Synthetic event", event_type: "checkup", event_date: "2026-06-01" }] },
     "/api/v1/medical/clinical-findings": { records: [] },
     "/api/v1/medical/recovery-sleep": { records: [] }
   };
@@ -159,6 +200,10 @@ class FakeElement {
     return node;
   }
 
+  get firstChild() {
+    return this.children[0] || null;
+  }
+
   addEventListener(type, handler) {
     this.listeners[type] = handler;
   }
@@ -180,4 +225,8 @@ function flushAsync() {
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function collectText(node) {
+  return [node.textContent, ...node.children.map(collectText)].filter(Boolean).join(" ");
 }

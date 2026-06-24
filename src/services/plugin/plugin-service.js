@@ -3,12 +3,12 @@ const { inputError } = require("../../utils/errors");
 const { safeEqual, sha256 } = require("../../utils/auth");
 
 const HERMES_PLUGIN_ACTIONS = Object.freeze([
-  { id: "record_metric", label: "记录指标", route: "record_metric", priority: 10 },
+  { id: "record_metric", label: "身体指标", route: "record_metric", priority: 10 },
   { id: "trend", label: "趋势", route: "trend", priority: 20 },
-  { id: "workout", label: "记录训练", route: "workout", priority: 30 },
-  { id: "report", label: "健康报告", route: "report", priority: 40 },
+  { id: "workout", label: "力量训练", route: "workout", priority: 30 },
+  { id: "report", label: "健康概览", route: "report", priority: 40 },
   { id: "medication", label: "用药/补剂", route: "medication", priority: 50 },
-  { id: "advice", label: "问健康建议", route: "advice", priority: 60 },
+  { id: "advice", label: "健康重点", route: "advice", priority: 60 },
 ]);
 
 function createPluginService({ userRepository, registrationKey, clock }) {

@@ -13,7 +13,12 @@
     sleep: "\u7761\u7720\u6062\u590d", riskHistory: "\u95ee\u9898\u8bc4\u4f30\u5386\u53f2",
     relatedLabs: "\u76f8\u5173\u68c0\u6d4b\u6570\u636e", relatedEvents: "\u76f8\u5173\u68c0\u67e5\u4e8b\u4ef6",
     relatedFindings: "\u76f8\u5173\u53d1\u73b0", setDetails: "\u8bad\u7ec3\u660e\u7ec6",
-    medicationList: "\u5f53\u524d\u7528\u836f", noMedication: "\u6682\u65e0\u7528\u836f\u8bb0\u5f55"
+    medicationList: "\u5f53\u524d\u7528\u836f", noMedication: "\u6682\u65e0\u7528\u836f\u8bb0\u5f55",
+    bodyMetrics: "\u8eab\u4f53\u6307\u6807", noBodyMetrics: "\u6682\u65e0\u8eab\u4f53\u6307\u6807",
+    trend: "\u8d8b\u52bf", noTrend: "\u6682\u65e0\u8d8b\u52bf\u6570\u636e",
+    strengthTraining: "\u529b\u91cf\u8bad\u7ec3", noWorkout: "\u6682\u65e0\u529b\u91cf\u8bad\u7ec3\u8bb0\u5f55",
+    healthOverview: "\u5065\u5eb7\u6982\u89c8", healthPriorities: "\u5065\u5eb7\u91cd\u70b9",
+    noPriorities: "\u6682\u65e0\u5065\u5eb7\u91cd\u70b9"
   };
   document.getElementById("backButton").addEventListener("click", goBack);
   document.getElementById("medicationButton").addEventListener("click", renderMedicationList);
@@ -112,23 +117,62 @@
       renderMedicationList();
       return;
     }
-    if (initialPluginRoute === "report" || initialPluginRoute === "trend" || initialPluginRoute === "record_metric") {
-      const firstRisk = state.medical.risks[0];
-      if (firstRisk) renderIssueDetail(firstRisk);
-      return;
-    }
+    if (initialPluginRoute === "record_metric") return renderBodyMetricRoute();
+    if (initialPluginRoute === "trend") return renderTrendRoute();
+    if (initialPluginRoute === "report") return renderOverviewRoute();
     if (initialPluginRoute === "workout") {
-      const firstStrength = state.strength[0];
-      if (firstStrength) {
-        openDetail(t.setDetails);
-        appendText(document.getElementById("detailView"), fmtDate(firstStrength.started_at));
-      }
-      return;
+      return renderWorkoutRoute();
     }
     if (initialPluginRoute === "advice") {
-      const firstRisk = state.medical.risks[0];
-      if (firstRisk) renderIssueDetail(firstRisk);
+      return renderPriorityRoute();
     }
+  }
+
+  function renderBodyMetricRoute() {
+    openDetail(t.bodyMetrics);
+    const detail = document.getElementById("detailView");
+    const latest = state.dashboard.body?.latest || {};
+    const rows = [
+      metricRow("\u4f53\u91cd", latest.weight),
+      metricRow("\u4f53\u8102\u7387", latest.body_fat_percentage),
+      metricRow("\u8170\u56f4", latest.waist_circumference)
+    ].filter(Boolean);
+    appendSection(detail, t.bodyMetrics, rows.length ? rows : [emptyRow(t.noBodyMetrics)]);
+  }
+
+  function renderTrendRoute() {
+    openDetail(t.trend);
+    const detail = document.getElementById("detailView");
+    const rows = [];
+    if (state.dashboard.strength?.weeklyVolumeKg) rows.push(appendDetached(t.strengthTraining, `${state.dashboard.strength.weeklyVolumeKg} kg`, ""));
+    const latest = state.dashboard.body?.latest || {};
+    for (const row of [metricRow("\u4f53\u91cd", latest.weight), metricRow("\u4f53\u8102\u7387", latest.body_fat_percentage), metricRow("\u8170\u56f4", latest.waist_circumference)].filter(Boolean)) {
+      rows.push(row);
+    }
+    appendSection(detail, t.trend, rows.length ? rows : [emptyRow(t.noTrend)]);
+  }
+
+  function renderWorkoutRoute() {
+    openDetail(t.strengthTraining);
+    const detail = document.getElementById("detailView");
+    appendSection(detail, t.strengthTraining, state.strength.length ? state.strength.slice(0, 6).map(strengthRow) : [emptyRow(t.noWorkout)]);
+  }
+
+  function renderOverviewRoute() {
+    openDetail(t.healthOverview);
+    const detail = document.getElementById("detailView");
+    const rows = [
+      ...state.medical.risks.slice(0, 4).map(riskRow),
+      ...state.medical.labs.slice(0, 4).map(labRow),
+      ...state.medical.events.slice(0, 4).map(eventRow)
+    ];
+    appendSection(detail, t.healthOverview, rows.length ? rows : [emptyRow(t.medicalEmpty)]);
+  }
+
+  function renderPriorityRoute() {
+    openDetail(t.healthPriorities);
+    const detail = document.getElementById("detailView");
+    appendSection(detail, t.healthPriorities, state.medical.risks.length ? state.medical.risks.slice(0, 6).map(riskRow) : [emptyRow(t.noPriorities)]);
   }
   function relatedLabs(risk) {
     const tests = labTestsFor(risk).map((name) => name.toLowerCase());
@@ -214,6 +258,8 @@
   function findingRow(row) { return appendDetached(row.title, row.status || "--", row.observed_at); }
   function eventRow(row) { return appendDetached(row.title, row.event_type || "--", row.event_date); }
   function sleepRow(row) { return appendDetached(row.source_type || t.sleep, `${row.total_sleep_minutes || "--"} min`, row.sleep_start); }
+  function strengthRow(row) { return appendDetached(t.setDetails, fmtDate(row.started_at), row.source_type || ""); }
+  function metricRow(title, item) { return item ? appendDetached(title, `${item.value} ${displayUnit(item.unit)}`, item.measured_at) : null; }
   function appendDetached(title, value, date) { const box = document.createElement("div"); appendRow(box, title, value, fmtDate(date)); return box.firstChild; }
   function emptyRow(title) { const box = document.createElement("div"); appendRow(box, title, "--", ""); return box.firstChild; }
   function medicationRow(row) {

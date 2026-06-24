@@ -17,13 +17,50 @@ test("manifest exposes unified Hermes plugin discovery fields", async () => {
     assert.equal(manifest.mcp.server, "health-mcp");
     assert.equal(manifest.mcp.toolset, "health");
     assert.deepEqual(manifest.toolsets, ["health"]);
-    assert.deepEqual(manifest.actions.find((action) => action.id === "record_metric"), {
-      id: "record_metric",
-      label: "记录指标",
-      placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
-      priority: 10,
-      entry: { type: "plugin_route", pluginRoute: "record_metric" }
-    });
+    assert.deepEqual(manifest.actions, [
+      {
+        id: "record_metric",
+        label: "身体指标",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 10,
+        entry: { type: "plugin_route", pluginRoute: "record_metric" }
+      },
+      {
+        id: "trend",
+        label: "趋势",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 20,
+        entry: { type: "plugin_route", pluginRoute: "trend" }
+      },
+      {
+        id: "workout",
+        label: "力量训练",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 30,
+        entry: { type: "plugin_route", pluginRoute: "workout" }
+      },
+      {
+        id: "report",
+        label: "健康概览",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 40,
+        entry: { type: "plugin_route", pluginRoute: "report" }
+      },
+      {
+        id: "medication",
+        label: "用药/补剂",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 50,
+        entry: { type: "plugin_route", pluginRoute: "medication" }
+      },
+      {
+        id: "advice",
+        label: "健康重点",
+        placement: ["plugin_drawer_frequent", "dock_long_press", "search"],
+        priority: 60,
+        entry: { type: "plugin_route", pluginRoute: "advice" }
+      }
+    ]);
     assert.equal(manifest.provisioning.endpoint, "/api/v1/hermes/plugin/workspaces");
     assert.equal(manifest.launch.endpoint, "/api/v1/hermes/plugin/launch");
     assert.equal(manifest.workspace.required, true);

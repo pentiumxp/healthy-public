@@ -30,6 +30,7 @@ Healthy 是个人健康结构化数据仓库，提供统计展示界面，并通
 - 来源文件与提取候选。
 - MCP 入库、查询、分析摘要。
 - 基础统计 UI。
+- Home AI host action labels must describe implemented embedded UI destinations. The first release exposes read-mostly views such as body metrics, trends, strength training, health overview, medications, and source-backed health priorities; direct metric/training entry forms, generated reports, and diagnosis-style advice are not host-visible UI actions until implemented and tested.
 
 以下领域暂缓：
 

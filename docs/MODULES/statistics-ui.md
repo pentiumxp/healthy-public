@@ -24,6 +24,29 @@ The embedded UI reads `/api/v1/dashboard` through workspace-bound launch context
 
 Apple Health data is not duplicated as a full dashboard in Healthy. The UI shows only whether Apple Health has synced and leaves concrete native metrics such as steps, calories, sleep, and Apple workout summaries to Apple Health itself. Healthy stores those records for AI analysis and focuses the visible interface on complementary data: medications, medical timeline priorities, source-backed findings, and strength training. Historical screenshot/cardio rows from Apple Fitness are not shown as a separate cardio panel because they duplicate HealthKit workout data after Apple Health sync is available.
 
+## Host Action Routes
+
+Home AI host actions must point to implemented embedded UI destinations. The
+embedded UI is currently read-mostly; it does not promise direct metric entry,
+training entry, generated medical reports, or diagnosis-style advice from host
+action labels.
+
+| action id | host label | destination | empty state |
+| --- | --- | --- | --- |
+| `record_metric` | `身体指标` | Latest body metrics detail | `暂无身体指标` |
+| `trend` | `趋势` | Strength and body trend summary | `暂无趋势数据` |
+| `workout` | `力量训练` | Strength training list | `暂无力量训练记录` |
+| `report` | `健康概览` | Risk, lab, and event overview | `暂无医疗时间线` |
+| `medication` | `用药/补剂` | Current medication and supplement list | `暂无用药记录` |
+| `advice` | `健康重点` | Source-backed health priorities | `暂无健康重点` |
+
+`advice` is intentionally labeled as `健康重点` in the manifest because Healthy
+may summarize source-backed priorities but must not expose medical diagnosis or
+medication-change advice as a direct host action. If future releases add metric
+or workout write forms, report generation, or AI advice workflows, the manifest
+labels, route implementation, product requirements, and executable route tests
+must be updated together.
+
 ## UI Boundary
 
 UI 可以：
