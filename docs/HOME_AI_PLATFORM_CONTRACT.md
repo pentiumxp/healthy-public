@@ -21,8 +21,10 @@ behavior, or cross-plugin reference behavior:
 
 - `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/root-cause-architecture-contract.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/fallback-governance-contract.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/github-shared-source-account-contract.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/macos-dev-to-production-deployment-contract.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/fallback-registry.md`
+- `/Users/hermes-dev/HermesMobileDev/app/docs/RUNBOOKS/github-shared-source-account.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/MODULES/ai-operations-control-plane.md`
 - `/Users/hermes-dev/HermesMobileDev/app/docs/IMPLEMENTATION_NOTES/ai-operations-control-plane.md`
 - `C:\Users\xuxin\Documents\Agent\docs\PLATFORM_CONTRACTS\plugin-workspace-platform-contract.md`
@@ -61,6 +63,7 @@ behavior, or cross-plugin reference behavior:
 | `ios_live_debug_available` | `yes`; use Home AI `npm run ios:pwa:debug` for interactive embedded iOS PWA reproduction, with one Simulator/live-debug-port/WDA-port/MJPEG-port lane per concurrent plugin debug session. |
 | `ios_visual_harness_command` | `cd /Users/hermes-dev/HermesMobileDev/app && npm run ios:pwa:visual -- --scenario embedded-plugin-shell --plugin-id health --debug-url http://127.0.0.1:19073/` |
 | `plugin_manifest_actions_status` | `declared`; Health exposes manifest `actions` for host Dock `常用`, long-press menus, and search. |
+| `github_shared_source_account_status` | `adopted`; `origin` uses `git@github.com-homeai-ssa:pentiumxp/healthy.git`; central contract and helper live under `/Users/hermes-dev/HermesMobileDev/app/docs/PLATFORM_CONTRACTS/github-shared-source-account-contract.md` and `/Users/hermes-dev/HermesMobileDev/app/scripts/github-shared-source-account.js`. Private key material is local operator secret and must never be copied into this repo, docs, handoff, or task cards. |
 
 ## Required Local Validation
 
