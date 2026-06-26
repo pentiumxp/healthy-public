@@ -122,6 +122,20 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
       sets: [{ exercise: { name: "Bench Press" }, weightValue: 80, weightUnit: "kg", reps: 5 }]
     });
     assert.equal(strength.sets.length, 1);
+    const pushUps = await mcpCall(workspace, "mcp_health_strength_session_record", {
+      startedAt: "2026-06-03T19:00:00+08:00",
+      sets: [
+        { exercise: { name: "俯卧撑" }, reps: 20 },
+        { exercise: { name: "push-up" }, reps: 15 },
+        { exercise: { name: "pushup" }, reps: 15 },
+        { exercise: { name: "push up" }, reps: 15 }
+      ]
+    });
+    assert.deepEqual(pushUps.sets.map((set) => set.reps), [20, 15, 15, 15]);
+    assert.deepEqual(pushUps.sets.map((set) => set.weight_kg), [0, 0, 0, 0]);
+    const strengthSessions = await mcpCall(workspace, "mcp_health_strength_sessions_list", {});
+    const pushUpSession = strengthSessions.sessions.find((session) => session.id === pushUps.session.id);
+    assert.deepEqual(pushUpSession.sets.map((set) => set.exercise_name), ["push_up", "push_up", "push_up", "push_up"]);
 
     const cardio = await mcpCall(workspace, "mcp_health_cardio_session_record", {
       startedAt: "2026-06-04T19:52:00+08:00",
@@ -183,7 +197,7 @@ test("MCP wrapper can write and read workspace-local health data", async () => {
 
     const summary = await mcpCall(workspace, "mcp_health_records_get_summary", {});
     assert.equal(summary.workspace_id, "health:weixin_test_1");
-    assert.equal(summary.summary.strength_sessions, 1);
+    assert.equal(summary.summary.strength_sessions, 2);
     assert.equal(summary.summary.cardio.sessionCount, 2);
     assert.equal(summary.summary.cardio.manualSessionCount, 1);
     assert.equal(summary.summary.cardio.appleHealthWorkoutCount, 1);

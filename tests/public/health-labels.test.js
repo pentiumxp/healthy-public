@@ -21,6 +21,8 @@ test("health UI labels prefer Chinese names with English notes", () => {
   assert.equal(labels.medication("Tirzepatide 5 mg weekly"), "\u66ff\u5c14\u6cca\u80bd (Tirzepatide)");
   assert.equal(labels.exercise("barbell_back_squat"), "\u6760\u94c3\u6df1\u8e72 (Barbell Back Squat)");
   assert.equal(labels.exercise("Barbell Overhead Press"), "\u6760\u94c3\u63a8\u80a9 (Barbell Overhead Press)");
+  assert.equal(labels.exercise("push_up"), "\u4fef\u5367\u6491 (Push-up)");
+  assert.equal(labels.exercise("push-up"), "\u4fef\u5367\u6491 (Push-up)");
   assert.equal(labels.activity("indoor_walk"), "\u5ba4\u5185\u6b65\u884c (Indoor Walk)");
   assert.equal(labels.status("active"), "\u4f7f\u7528\u4e2d");
   assert.equal(labels.frequency("weekly"), "\u6bcf\u5468 (weekly)");

@@ -156,6 +156,7 @@
 | `barbell_overhead_press` | 杠铃推肩 | 推肩、杠铃推举、杠铃肩推、Overhead Press、Barbell Overhead Press |
 | `barbell_bench_press` | 杠铃卧推 | 卧推、平板卧推、Bench Press、Barbell Bench Press |
 | `barbell_deadlift` | 杠铃硬拉 | 硬拉、Deadlift、Barbell Deadlift |
+| `push_up` | 俯卧撑 | pushup、push-up、push up、俯卧撑、伏地挺身 |
 | `barbell_row` | 杠铃划船 | 划船、Barbell Row、Bent-over Row |
 | `pull_up` | 引体向上 | 引体、Pull-up、Pullup |
 

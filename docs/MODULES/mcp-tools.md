@@ -62,7 +62,7 @@ Healthy 的 canonical catalog。
 
 - `set.exercise.key` 是首选字段，例如 `barbell_back_squat`。
 - 如果只提供 `set.exercise.name`，服务端只接受已登记 alias，例如
-  `深蹲`、`杠铃深蹲`、`Barbell Squat`。
+  `深蹲`、`杠铃深蹲`、`Barbell Squat`、`俯卧撑`、`push-up`。
 - 服务端保存 canonical key，不用模型自由文本做统计分组。
 - 未命中 catalog/alias 时返回 `unsupported_exercise`，不得自动创建新动作。
 

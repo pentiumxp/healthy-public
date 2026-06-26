@@ -38,6 +38,27 @@ test("strength sessions normalize exercise aliases to canonical catalog keys", (
   assert.deepEqual(sessions[0].sets.map((set) => set.exercise_name), ["barbell_back_squat", "barbell_overhead_press"]);
 });
 
+test("strength sessions support bodyweight push-up aliases and reps-only sets", () => {
+  const services = createTestServices();
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  services.strengthService.recordSession({
+    workspaceRef: "health:weixin_test_1",
+    startedAt: "2026-06-25T19:00:00+08:00",
+    sets: [
+      { exercise: { name: "俯卧撑" }, reps: 20 },
+      { exercise: { name: "push-up" }, reps: 15 },
+      { exercise: { name: "pushup" }, reps: 15 },
+      { exercise: { name: "push up" }, reps: 15 }
+    ]
+  });
+
+  const [session] = services.strengthService.listSessions({ workspaceRef: "health:weixin_test_1" });
+  assert.deepEqual(session.sets.map((set) => set.exercise_name), ["push_up", "push_up", "push_up", "push_up"]);
+  assert.deepEqual(session.sets.map((set) => set.reps), [20, 15, 15, 15]);
+  assert.deepEqual(session.sets.map((set) => set.weight_kg), [0, 0, 0, 0]);
+});
+
 test("strength sessions reject unknown exercise labels", () => {
   const services = createTestServices();
   provisionWorkspace(services, "weixin_test_1", "key-test");

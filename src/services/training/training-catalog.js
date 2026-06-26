@@ -4,7 +4,8 @@ const STRENGTH_EXERCISES = [
   entry("barbell_bench_press", "杠铃卧推", "Barbell Bench Press", ["bench", "bench press", "barbell bench press", "卧推", "平板卧推", "杠铃卧推"], "chest", "barbell"),
   entry("barbell_deadlift", "杠铃硬拉", "Barbell Deadlift", ["deadlift", "barbell deadlift", "硬拉", "杠铃硬拉"], "posterior_chain", "barbell"),
   entry("barbell_row", "杠铃划船", "Barbell Row", ["row", "barbell row", "bent over row", "划船", "杠铃划船"], "back", "barbell"),
-  entry("pull_up", "引体向上", "Pull-up", ["pullup", "pull-up", "pull up", "引体", "引体向上"], "back", "bodyweight")
+  entry("pull_up", "引体向上", "Pull-up", ["pullup", "pull-up", "pull up", "引体", "引体向上"], "back", "bodyweight"),
+  entry("push_up", "俯卧撑", "Push-up", ["pushup", "push-up", "push up", "俯卧撑", "伏地挺身"], "chest", "bodyweight")
 ];
 
 const CARDIO_ACTIVITIES = [

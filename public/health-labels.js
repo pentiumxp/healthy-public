@@ -59,7 +59,10 @@
     "barbell row": ["杠铃划船", "Barbell Row"],
     row: ["划船", "Row"],
     pullup: ["引体向上", "Pull-up"],
-    "pull-up": ["引体向上", "Pull-up"]
+    "pull-up": ["引体向上", "Pull-up"],
+    "push up": ["俯卧撑", "Push-up"],
+    pushup: ["俯卧撑", "Push-up"],
+    "push-up": ["俯卧撑", "Push-up"]
   };
   const riskLabels = {
     atherosclerosis: ["冠脉/颈动脉粥样硬化", "Atherosclerosis"],
