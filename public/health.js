@@ -287,21 +287,22 @@
     ];
     const byKey = Object.fromEntries(groups.map((group) => [group.key, group]));
     for (const row of rows) {
-      byKey[medicationTimeGroup(row)].items.push(row);
+      for (const key of medicationTimeGroups(row)) byKey[key].items.push(row);
     }
     return groups.filter((group) => group.items.length);
   }
 
-  function medicationTimeGroup(row) {
+  function medicationTimeGroups(row) {
     const text = `${row.frequency || ""} ${row.notes || ""}`.toLowerCase();
-    if (/(\b(am|morning|breakfast)\b|\u65e9|\u65e9\u4e0a|\u65e9\u9910|\u6668|\u8d77\u5e8a)/i.test(text)) return "morning";
-    if (/(\b(noon|lunch|midday)\b|\u4e2d\u5348|\u4e2d\u9910|\u5348\u9910|\u5348\u95f4)/i.test(text)) return "noon";
-    if (/(\b(pm|evening|dinner|night|bedtime)\b|\u665a|\u665a\u4e0a|\u665a\u9910|\u7761\u524d|\u591c\u95f4)/i.test(text)) return "evening";
+    if (/(\b(tid|three times daily|3 times daily|three times a day|3 times a day)\b|\u4e00\u5929\u4e09\u6b21|\u6bcf\u5929\u4e09\u6b21|\u6bcf\u65e53\u6b21|\u65e5\u4e09\u6b21|\u4e09\u9910)/i.test(text)) return ["morning", "noon", "evening"];
+    if (/(\b(am|morning|breakfast)\b|\u65e9|\u65e9\u4e0a|\u65e9\u9910|\u6668|\u8d77\u5e8a)/i.test(text)) return ["morning"];
+    if (/(\b(noon|lunch|midday)\b|\u4e2d\u5348|\u4e2d\u9910|\u5348\u9910|\u5348\u95f4)/i.test(text)) return ["noon"];
+    if (/(\b(pm|evening|dinner|night|bedtime)\b|\u665a|\u665a\u4e0a|\u665a\u9910|\u7761\u524d|\u591c\u95f4)/i.test(text)) return ["evening"];
     const hour = medicationHour(row);
-    if (hour >= 5 && hour < 11) return "morning";
-    if (hour >= 11 && hour < 16) return "noon";
-    if (hour >= 16 || (hour >= 0 && hour < 5)) return "evening";
-    return "unscheduled";
+    if (hour >= 5 && hour < 11) return ["morning"];
+    if (hour >= 11 && hour < 16) return ["noon"];
+    if (hour >= 16 || (hour >= 0 && hour < 5)) return ["evening"];
+    return ["unscheduled"];
   }
 
   function medicationHour(row) {

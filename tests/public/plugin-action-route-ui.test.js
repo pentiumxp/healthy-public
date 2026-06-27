@@ -59,6 +59,7 @@ test("health UI groups active medications by morning noon and evening", async ()
         { name: "Morning med", status: "active", frequency: "\u65e9\u9910\u540e" },
         { name: "Noon med", status: "active", frequency: "lunch" },
         { name: "Evening med", status: "active", frequency: "\u7761\u524d" },
+        { name: "Three times med", status: "active", frequency: "\u4e00\u5929\u4e09\u6b21" },
         { name: "Flexible med", status: "active", frequency: "weekly" }
       ]
     })
@@ -69,6 +70,7 @@ test("health UI groups active medications by morning noon and evening", async ()
   assert.match(text, /\u65e9\u4e0a[\s\S]*Morning med/);
   assert.match(text, /\u4e2d\u5348[\s\S]*Noon med/);
   assert.match(text, /\u665a\u4e0a[\s\S]*Evening med/);
+  assert.equal((text.match(/Three times med/g) || []).length, 3);
   assert.match(text, /\u672a\u5206\u65f6\u6bb5[\s\S]*Flexible med/);
 });
 
