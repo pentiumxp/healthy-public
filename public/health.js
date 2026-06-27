@@ -14,6 +14,7 @@
     relatedLabs: "\u76f8\u5173\u68c0\u6d4b\u6570\u636e", relatedEvents: "\u76f8\u5173\u68c0\u67e5\u4e8b\u4ef6",
     relatedFindings: "\u76f8\u5173\u53d1\u73b0", setDetails: "\u8bad\u7ec3\u660e\u7ec6",
     medicationList: "\u5f53\u524d\u7528\u836f", noMedication: "\u6682\u65e0\u7528\u836f\u8bb0\u5f55",
+    medicationMorning: "\u65e9\u4e0a", medicationNoon: "\u4e2d\u5348", medicationEvening: "\u665a\u4e0a", medicationUnscheduled: "\u672a\u5206\u65f6\u6bb5",
     bodyMetrics: "\u8eab\u4f53\u6307\u6807", noBodyMetrics: "\u6682\u65e0\u8eab\u4f53\u6307\u6807",
     trend: "\u8d8b\u52bf", noTrend: "\u6682\u65e0\u8d8b\u52bf\u6570\u636e",
     strengthTraining: "\u529b\u91cf\u8bad\u7ec3", noWorkout: "\u6682\u65e0\u529b\u91cf\u8bad\u7ec3\u8bb0\u5f55",
@@ -109,8 +110,13 @@
   function renderMedicationList() {
     openDetail(t.medicationList);
     const detail = document.getElementById("detailView");
-    const rows = state.medications.map(medicationRow);
-    appendSection(detail, t.medicationList, rows.length ? rows : [emptyRow(t.noMedication)]);
+    if (!state.medications.length) {
+      appendSection(detail, t.medicationList, [emptyRow(t.noMedication)]);
+      return;
+    }
+    for (const group of groupedMedications(state.medications)) {
+      appendSection(detail, group.title, group.items.map(medicationRow));
+    }
   }
   function applyInitialPluginRoute() {
     if (!initialPluginRoute || state.pluginRouteApplied) return;
@@ -270,6 +276,38 @@
     const box = document.createElement("div");
     appendRow(box, labels.medication(row.name), dose || labels.status(row.status), meta);
     return box.firstChild;
+  }
+
+  function groupedMedications(rows) {
+    const groups = [
+      { key: "morning", title: t.medicationMorning, items: [] },
+      { key: "noon", title: t.medicationNoon, items: [] },
+      { key: "evening", title: t.medicationEvening, items: [] },
+      { key: "unscheduled", title: t.medicationUnscheduled, items: [] }
+    ];
+    const byKey = Object.fromEntries(groups.map((group) => [group.key, group]));
+    for (const row of rows) {
+      byKey[medicationTimeGroup(row)].items.push(row);
+    }
+    return groups.filter((group) => group.items.length);
+  }
+
+  function medicationTimeGroup(row) {
+    const text = `${row.frequency || ""} ${row.notes || ""}`.toLowerCase();
+    if (/(\b(am|morning|breakfast)\b|\u65e9|\u65e9\u4e0a|\u65e9\u9910|\u6668|\u8d77\u5e8a)/i.test(text)) return "morning";
+    if (/(\b(noon|lunch|midday)\b|\u4e2d\u5348|\u4e2d\u9910|\u5348\u9910|\u5348\u95f4)/i.test(text)) return "noon";
+    if (/(\b(pm|evening|dinner|night|bedtime)\b|\u665a|\u665a\u4e0a|\u665a\u9910|\u7761\u524d|\u591c\u95f4)/i.test(text)) return "evening";
+    const hour = medicationHour(row);
+    if (hour >= 5 && hour < 11) return "morning";
+    if (hour >= 11 && hour < 16) return "noon";
+    if (hour >= 16 || (hour >= 0 && hour < 5)) return "evening";
+    return "unscheduled";
+  }
+
+  function medicationHour(row) {
+    const source = row.scheduled_at || row.scheduledAt || row.taken_at || row.takenAt || "";
+    const match = String(source).match(/T(\d{2}):/);
+    return match ? Number(match[1]) : -1;
   }
 
   function renderEmpty(message) { setText("latestStrength", message || t.noStrength); renderBars([]); postNavigation(false); }

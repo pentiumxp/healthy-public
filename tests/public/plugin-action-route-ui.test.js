@@ -51,6 +51,27 @@ test("health UI renders explicit empty states for every host plugin action route
   }
 });
 
+test("health UI groups active medications by morning noon and evening", async () => {
+  const sandbox = runHealthUi({
+    search: "?launch=launch-test&workspace_id=health:test&pluginRoute=medication",
+    fetchJson: successPayloads({
+      medications: [
+        { name: "Morning med", status: "active", frequency: "\u65e9\u9910\u540e" },
+        { name: "Noon med", status: "active", frequency: "lunch" },
+        { name: "Evening med", status: "active", frequency: "\u7761\u524d" },
+        { name: "Flexible med", status: "active", frequency: "weekly" }
+      ]
+    })
+  });
+  await flushAsync();
+
+  const text = collectText(sandbox.document.getElementById("detailView"));
+  assert.match(text, /\u65e9\u4e0a[\s\S]*Morning med/);
+  assert.match(text, /\u4e2d\u5348[\s\S]*Noon med/);
+  assert.match(text, /\u665a\u4e0a[\s\S]*Evening med/);
+  assert.match(text, /\u672a\u5206\u65f6\u6bb5[\s\S]*Flexible med/);
+});
+
 test("health UI host back message returns action route detail to home", async () => {
   const sandbox = runHealthUi({
     search: "?launch=launch-test&workspace_id=health:test&pluginRoute=medication",
@@ -147,7 +168,7 @@ function runHealthUi({ search, fetchJson }) {
   return sandbox;
 }
 
-function successPayloads({ empty = false } = {}) {
+function successPayloads({ empty = false, medications = null } = {}) {
   const payloads = {
     "/api/v1/dashboard": {
       workspace: { id: "health:test", hermesWorkspaceId: "test" },
@@ -159,7 +180,7 @@ function successPayloads({ empty = false } = {}) {
       medical: { counts: {} }
     },
     "/api/v1/strength/sessions": { sessions: empty ? [] : [{ started_at: "2026-06-01T12:00:00.000Z", source_type: "manual", sets: [] }] },
-    "/api/v1/profile/medications": { medications: empty ? [] : [{ name: "Synthetic medication", status: "active" }] },
+    "/api/v1/profile/medications": { medications: empty ? [] : (medications || [{ name: "Synthetic medication", status: "active" }]) },
     "/api/v1/medical/risk-profiles": { records: empty ? [] : [{ risk_key: "synthetic", label: "Synthetic risk", status: "active", priority: 1 }] },
     "/api/v1/medical/lab-results": { records: empty ? [] : [{ test_name: "Synthetic lab", value: 1, unit: "u", observed_at: "2026-06-01" }] },
     "/api/v1/medical/clinical-events": { records: empty ? [] : [{ title: "Synthetic event", event_type: "checkup", event_date: "2026-06-01" }] },
