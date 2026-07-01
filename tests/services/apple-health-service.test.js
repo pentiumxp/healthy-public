@@ -386,3 +386,51 @@ test("Apple Health bulk sync coerces structured source metadata before SQLite bi
   const sampleRow = services.db.prepare("SELECT external_id FROM apple_health_ecg_voltage_samples WHERE ecg_id = ? ORDER BY sample_index ASC LIMIT 1").get(ecg.id);
   assert.match(sampleRow.external_id, /^\{"sample":1/);
 });
+
+test("Apple Health guardian status reports upload freshness and bounded client metadata", () => {
+  const services = createTestServices({ clock: () => new Date("2026-06-17T12:00:00.000Z") });
+  provisionWorkspace(services, "weixin_test_1", "key-test");
+
+  const empty = services.appleHealthService.getGuardianStatus({ workspaceRef: "health:weixin_test_1" });
+  assert.equal(empty.overall.status, "stale");
+  assert.deepEqual(empty.overall.missing_domains, ["daily_summaries", "sleep_records", "vitals"]);
+  assert.equal(empty.domains.workouts.status, "not_expected");
+  assert.equal(empty.domains.ecg_records.status, "not_expected");
+
+  const synced = services.appleHealthService.incrementalSync({
+    workspaceRef: "health:weixin_test_1",
+    source: "apple_health_ios",
+    range: "latest",
+    clientSyncId: "ios-guardian-run-1",
+    guardianMode: { enabled: true, clientReportedAt: "2026-06-17T11:58:00.000Z" },
+    daily_summaries: [{ summaryDate: "2026-06-17", steps: 4200 }],
+    sleep_records: [{ sleepStart: "2026-06-16T22:30:00.000Z", sleepEnd: "2026-06-17T05:45:00.000Z" }],
+    vitals: [{ measuredAt: "2026-06-17T07:30:00.000Z", metric: "heart_rate", value: 68 }]
+  });
+  assert.equal(synced.mode, "incremental");
+
+  const fresh = services.appleHealthService.getGuardianStatus({ workspaceRef: "health:weixin_test_1" });
+  assert.equal(fresh.guardian.enabled, true);
+  assert.equal(fresh.guardian.last_successful_upload_at, "2026-06-17T12:00:00.000Z");
+  assert.equal(fresh.guardian.last_client_sync_id, "ios-guardian-run-1");
+  assert.equal(fresh.latest_health_upload_at, "2026-06-17T12:00:00.000Z");
+  assert.equal(fresh.overall.status, "fresh");
+  assert.equal(fresh.domains.vitals.status, "fresh");
+  assert.equal(fresh.domains.vitals.threshold_hours, 6);
+  assert.equal(fresh.domains.sleep_records.expectation, "expected_after_sleep_window");
+
+  const disabled = services.appleHealthService.updateGuardianStatus({
+    workspaceRef: "health:weixin_test_1",
+    guardian: {
+      enabled: false,
+      clientReportedAt: "2026-06-17T12:01:00.000Z",
+      lastFailedUploadAt: "2026-06-17T11:59:00.000Z",
+      lastFailureCode: "background_budget_exhausted",
+      lastFailureMessage: "iOS did not launch background refresh before timeout"
+    }
+  });
+  assert.equal(disabled.guardian.enabled, false);
+  assert.equal(disabled.guardian.last_failed_upload_at, "2026-06-17T11:59:00.000Z");
+  assert.equal(disabled.guardian.last_failure_message, "iOS did not launch background refresh before timeout");
+  assert.equal(disabled.overall.status, "disabled");
+});

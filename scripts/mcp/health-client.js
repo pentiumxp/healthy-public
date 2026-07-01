@@ -24,6 +24,7 @@ function createHealthClient(context) {
   return {
     addMedication: (medication) => request("POST", "/api/v1/profile/medications", medication),
     bulkSyncAppleHealth: (payload) => request("POST", "/api/v1/apple-health/bulk-sync", payload),
+    getAppleHealthGuardianStatus: () => request("GET", "/api/v1/apple-health/guardian-status"),
     getAppleHealthSyncState: () => request("GET", "/api/v1/apple-health/sync-state"),
     incrementalSyncAppleHealth: (payload) => request("POST", "/api/v1/apple-health/incremental-sync", payload),
     createAppleDailySummary: (record) => request("POST", "/api/v1/apple-health/daily-summaries", record),

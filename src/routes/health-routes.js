@@ -74,6 +74,17 @@ async function handleHealthRoute(req, res, url, services) {
     sendJson(res, 200, services.appleHealthService.getSyncState({ workspaceRef }));
     return true;
   }
+  if (req.method === "GET" && url.pathname === "/api/v1/apple-health/guardian-status") {
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url });
+    sendJson(res, 200, services.appleHealthService.getGuardianStatus({ workspaceRef }));
+    return true;
+  }
+  if (req.method === "POST" && url.pathname === "/api/v1/apple-health/guardian-status") {
+    const body = await readJson(req);
+    const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });
+    sendJson(res, 200, services.appleHealthService.updateGuardianStatus({ ...body, workspaceRef }));
+    return true;
+  }
   if (req.method === "POST" && url.pathname === "/api/v1/apple-health/incremental-sync") {
     const body = await readJson(req);
     const workspaceRef = resolveAccess({ pluginService: services.pluginService, req, url, body });

@@ -1,11 +1,13 @@
 const { newId } = require("../utils/ids");
 const { nowIso } = require("../utils/time");
 const { createAppleHealthEcgRepository } = require("./apple-health-ecg-repository");
+const { createAppleHealthGuardianRepository } = require("./apple-health-guardian-repository");
 const { createAppleHealthSyncStateRepository } = require("./apple-health-sync-state-repository");
 const { createWorkoutHeartRateRepository } = require("./apple-health-workout-heart-rate-repository");
 const { bestStoredSleepRecord, collapseSleepRecords, sleepDayKey } = require("../utils/apple-health-sleep-records");
 function createAppleHealthRepository(db, { clock } = {}) {
   const ecgRepository = createAppleHealthEcgRepository(db, { clock });
+  const guardianRepository = createAppleHealthGuardianRepository(db, { clock });
   const syncStateRepository = createAppleHealthSyncStateRepository(db);
   const workoutHeartRate = createWorkoutHeartRateRepository(db, { clock });
   function upsertDailySummary(userId, record) {
@@ -219,6 +221,8 @@ function createAppleHealthRepository(db, { clock } = {}) {
   function upsertEcgRecords(userId, records) { return ecgRepository.upsertEcgRecords(userId, records); }
 
   function getSyncState(userId) { return syncStateRepository.getSyncState(userId); }
+  function getGuardianStatus(userId) { return guardianRepository.getGuardianStatus(userId); }
+  function upsertGuardianStatus(userId, patch) { return guardianRepository.upsertGuardianStatus(userId, patch); }
 
   function getByExternal(table, userId, sourceType, externalId) {
     return db.prepare(`SELECT * FROM ${table} WHERE user_id = ? AND source_type = ? AND external_id = ?`)
@@ -234,10 +238,10 @@ function createAppleHealthRepository(db, { clock } = {}) {
   }
 
   return {
-    getEcgRecord, getSyncState, listDailySummaries, listEcgRecords, listImportFiles,
+    getEcgRecord, getGuardianStatus, getSyncState, listDailySummaries, listEcgRecords, listImportFiles,
     listObservations, listRoutePoints, listSleepRecords, listWorkouts,
     upsertDailySummaries, upsertDailySummary, upsertEcgRecords,
-    upsertSleepRecords, upsertWorkouts, upsertWorkout
+    upsertGuardianStatus, upsertSleepRecords, upsertWorkouts, upsertWorkout
   };
 }
 

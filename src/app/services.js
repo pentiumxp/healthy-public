@@ -27,7 +27,7 @@ function createServices(config = {}) {
   const cardioService = createCardioService({ profileService, cardioRepository });
   const bodyService = createBodyService({ profileService, bodyRepository });
   const medicalRecordsService = createMedicalRecordsService({ profileService, medicalRecordsRepository });
-  const appleHealthService = createAppleHealthService({ profileService, appleHealthRepository, bodyService });
+  const appleHealthService = createAppleHealthService({ profileService, appleHealthRepository, bodyService, clock: config.clock });
   const pluginService = createPluginService({
     userRepository,
     registrationKey: config.registrationKey,

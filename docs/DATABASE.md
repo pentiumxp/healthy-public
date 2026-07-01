@@ -508,6 +508,35 @@ AI 工具按需读取。
   `GET /api/v1/apple-health/ecg-records/:recordId` 或
   `GET /api/v1/apple-health/ecg-records/by-external-id?externalId=<id>`。
 
+### apple_health_guardian_status
+
+保存 iOS Apple Health 健康守护模式的 bounded 同步状态。该表不保存健康样本、
+ECG 波形、用药明细或 raw payload；样本事实仍保存在各 Apple Health domain
+表和 `body_measurements` 中。
+
+- `id`
+- `user_id`
+- `enabled`
+- `client_state`
+- `client_reported_at`
+- `last_successful_upload_at`
+- `last_failed_upload_at`
+- `last_failure_code`
+- `last_failure_message`
+- `last_client_sync_id`
+- `last_source`
+- `last_range`
+- `created_at`
+- `updated_at`
+
+约束：
+
+- `user_id` 唯一。
+- `enabled` 是客户端上报的可选开关状态；缺失时不推断用户已启用。
+- `last_failure_message` 只能保存 bounded 短摘要，不保存 raw payload 或长日志。
+- Freshness/stale 判断由 service 基于各 domain 最新样本和更新时间计算，不写回为
+  医学结论。
+
 ## Apple Health 清洗导出兼容记录
 
 已抽样核对 Owner 工作区

@@ -68,6 +68,7 @@ const TOOLS = [
   tool("mcp_health_cardio_session_record", "Record a cardio/aerobic workout session. Use this for indoor_walk, elliptical, run, cycling, rowing, and outdoor_walk instead of clinical_event.", cardioProps(), ["startedAt", "activityType"]),
   tool("mcp_health_apple_health_bulk_sync", "Bulk upsert Apple Health data from the native iOS shell. Workspace and credentials are resolved by the MCP wrapper, not by tool arguments.", appleHealthBulkProps()),
   tool("mcp_health_apple_health_sync_state_get", "Return Apple Health sync watermarks. Native clients should query HealthKit after recommended_since and skip writes when no new samples exist.", {}),
+  tool("mcp_health_apple_health_guardian_status_get", "Return Apple Health guardian-mode freshness by domain: latest upload, latest sample, stale/missing status, and bounded client-reported mode metadata.", {}),
   tool("mcp_health_apple_health_incremental_sync", "Upsert only the latest Apple Health payload selected by the native client after reading sync_state. Uses the same idempotent keys as bulk sync.", appleHealthBulkProps()),
   tool("mcp_health_apple_daily_summaries_list", "List long-term Apple Health daily summaries such as steps, energy, exercise minutes, distance, and heart rate.", { limit: numberProp() }),
   tool("mcp_health_apple_daily_summary_record", "Record or update one Apple Health daily summary from the native app shell.", appleDailyProps(), ["summaryDate"]),
@@ -161,6 +162,7 @@ async function dispatch(name, args, client) {
   if (name === "mcp_health_cardio_session_record") return await client.createCardioSession(args);
   if (name === "mcp_health_apple_health_bulk_sync") return await client.bulkSyncAppleHealth(args);
   if (name === "mcp_health_apple_health_sync_state_get") return await client.getAppleHealthSyncState();
+  if (name === "mcp_health_apple_health_guardian_status_get") return await client.getAppleHealthGuardianStatus();
   if (name === "mcp_health_apple_health_incremental_sync") return await client.incrementalSyncAppleHealth(args);
   if (name === "mcp_health_apple_daily_summaries_list") return await client.listAppleDailySummaries(args);
   if (name === "mcp_health_apple_daily_summary_record") return await client.createAppleDailySummary(args);
@@ -316,6 +318,10 @@ function nullableNumberProp() {
   return { type: ["number", "null"] };
 }
 
+function booleanStringProp() {
+  return { type: ["boolean", "string"] };
+}
+
 function objectProp() {
   return { type: "object", additionalProperties: true };
 }
@@ -342,6 +348,19 @@ function appleHealthBulkProps() {
     range: stringProp(),
     client_sync_id: stringProp(),
     clientSyncId: stringProp(),
+    guardian: objectProp(),
+    guardian_mode: objectProp(),
+    guardianMode: objectProp(),
+    guardian_mode_enabled: booleanStringProp(),
+    guardianModeEnabled: booleanStringProp(),
+    client_reported_at: stringProp(),
+    clientReportedAt: stringProp(),
+    last_failed_upload_at: stringProp(),
+    lastFailedUploadAt: stringProp(),
+    last_failure_code: stringProp(),
+    lastFailureCode: stringProp(),
+    last_failure_message: stringProp(),
+    lastFailureMessage: stringProp(),
     daily_summaries: arrayObjectsProp(),
     dailySummaries: arrayObjectsProp(),
     workouts: arrayObjectsProp(),

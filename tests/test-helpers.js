@@ -4,7 +4,7 @@ const { sha256 } = require("../src/utils/auth");
 
 function createTestServices(options = {}) {
   const db = createMigratedDatabase(":memory:");
-  return createServices({ db, registrationKey: options.registrationKey ?? "registration-key" });
+  return createServices({ db, registrationKey: options.registrationKey ?? "registration-key", clock: options.clock });
 }
 
 function provisionWorkspace(services, hermesWorkspaceId, rawKey) {

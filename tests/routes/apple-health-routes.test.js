@@ -127,10 +127,14 @@ test("Apple Health sync state supports latest-only native synchronization", asyn
     assert.equal(emptyState.domains.daily_summaries.latest_record_at, null);
     assert.equal(emptyState.domains.workouts.record_count, 0);
     assert.equal(emptyState.instructions.write_endpoint, "/api/v1/apple-health/incremental-sync");
+    const emptyGuardian = await api(base, "/api/v1/apple-health/guardian-status", "GET", launchToken);
+    assert.equal(emptyGuardian.mode, "guardian_freshness");
+    assert.ok(emptyGuardian.overall.missing_domains.includes("vitals"));
 
     const noPayload = await api(base, "/api/v1/apple-health/incremental-sync", "POST", launchToken, {
       source: "apple_health_ios",
-      range: "latest"
+      range: "latest",
+      guardianMode: { enabled: true, clientReportedAt: "2026-06-17T07:00:00.000Z" }
     });
     assert.equal(noPayload.mode, "incremental");
     assert.deepEqual(noPayload.counts, {
@@ -154,6 +158,23 @@ test("Apple Health sync state supports latest-only native synchronization", asyn
     assert.equal(state.domains.ecg_records.latest_record_at, "2026-06-16T23:00:00.000Z");
     assert.equal(state.domains.vitals.latest_record_at, "2026-06-16T23:01:00.000Z");
     assert.match(state.domains.vitals.recommended_since, /^2026-06-14T23:01:00/);
+    const guardian = await api(base, "/api/v1/apple-health/guardian-status", "GET", launchToken);
+    assert.equal(guardian.guardian.enabled, true);
+    assert.equal(guardian.guardian.last_range, "latest");
+    assert.equal(guardian.domains.vitals.last_sample_at, "2026-06-16T23:01:00.000Z");
+    assert.equal(guardian.domains.workouts.expectation, "opportunistic");
+    assert.equal(guardian.instructions.status_endpoint, "/api/v1/apple-health/guardian-status");
+    const updatedGuardian = await api(base, "/api/v1/apple-health/guardian-status", "POST", launchToken, {
+      guardian: {
+        enabled: false,
+        clientReportedAt: "2026-06-17T08:00:00.000Z",
+        lastFailedUploadAt: "2026-06-17T07:45:00.000Z",
+        lastFailureCode: "background_refresh_timeout"
+      }
+    });
+    assert.equal(updatedGuardian.guardian.enabled, false);
+    assert.equal(updatedGuardian.guardian.last_failure_code, "background_refresh_timeout");
+    assert.equal(updatedGuardian.overall.status, "disabled");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

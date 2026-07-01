@@ -6,6 +6,7 @@ const { normalizeCardioActivity } = require("../training/training-catalog");
 const { createEcgNormalizer } = require("./ecg-normalizer");
 const { createAppleListService } = require("./apple-list-service");
 const { decorateSyncState } = require("./sync-state-service");
+const { createGuardianStatusService } = require("./guardian-status-service");
 const { createMeasurementUpserter } = require("./measurement-upserter");
 const { createWorkoutHeartRateNormalizer } = require("./workout-heart-rate-normalizer");
 const { canonicalSleepRecord } = require("../../utils/apple-health-sleep-records");
@@ -16,8 +17,9 @@ const METRIC_ALIASES = Object.freeze({
   waistcircumference: "waist_circumference", hipcircumference: "hip_circumference", walkingaverageheartrate: "walking_average_heart_rate",
   heartrate: "heart_rate", restingheartrate: "resting_heart_rate", oxygensaturation: "oxygen_saturation", respiratoryrate: "respiratory_rate", vo2max: "vo2_max", bloodglucose: "blood_glucose"
 });
-function createAppleHealthService({ profileService, appleHealthRepository, bodyService }) {
+function createAppleHealthService({ profileService, appleHealthRepository, bodyService, clock }) {
   const lists = createAppleListService({ profileService, appleHealthRepository, limit });
+  const guardianStatus = createGuardianStatusService({ clock });
   const measurementUpserter = createMeasurementUpserter({ bodyService, inputError });
   function bulkSync(input) {
     assertCleanText(input, "appleHealthBulkSync");
@@ -28,6 +30,7 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
     const ecg = appleHealthRepository.upsertEcgRecords(user.id, array(input.ecg_records ?? input.ecgRecords ?? input.electrocardiograms).map(normalizeEcg));
     const body = recordMeasurements(input.workspaceRef, array(input.body_measurements ?? input.bodyMeasurements), "body_measurements");
     const vitals = recordMeasurements(input.workspaceRef, array(input.vitals), "vitals");
+    appleHealthRepository.upsertGuardianStatus(user.id, guardianStatus.normalizePatch(input, { markSuccessfulUpload: true }));
     return { ok: true, source: input.source || "apple_health_ios", range: input.range || "", client_sync_id: input.client_sync_id || input.clientSyncId || "", counts: {
       daily_summaries: daily.length, workouts: workouts.length, sleep_records: sleep.length,
       ecg_records: ecg.length, body_measurements: body.length, vitals: vitals.length
@@ -38,6 +41,20 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
   function getSyncState(input) {
     const user = profileService.getUserByWorkspace(input.workspaceRef);
     return decorateSyncState(appleHealthRepository.getSyncState(user.id));
+  }
+  function getGuardianStatus(input) {
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    return guardianStatus.buildStatus({
+      workspaceRef: user.workspace_ref,
+      syncState: appleHealthRepository.getSyncState(user.id),
+      storedStatus: appleHealthRepository.getGuardianStatus(user.id)
+    });
+  }
+  function updateGuardianStatus(input) {
+    assertCleanText(input, "appleHealthGuardianStatus");
+    const user = profileService.getUserByWorkspace(input.workspaceRef);
+    appleHealthRepository.upsertGuardianStatus(user.id, guardianStatus.normalizePatch(input));
+    return getGuardianStatus({ workspaceRef: user.workspace_ref });
   }
   function recordDailySummary(input) {
     assertCleanText(input, "appleHealthDailySummary");
@@ -99,11 +116,12 @@ function createAppleHealthService({ profileService, appleHealthRepository, bodyS
   }
 
   return {
-    bulkSync, getEcgRecord, getSnapshot, getSyncState, incrementalSync, listDailySummaries,
+    bulkSync, getEcgRecord, getGuardianStatus, getSnapshot, getSyncState, incrementalSync, listDailySummaries,
     listEcgRecords: lists.listEcgRecords, listImportFiles: lists.listImportFiles,
     listObservations: lists.listObservations, listRoutePoints: lists.listRoutePoints,
     listSleepRecords: lists.listSleepRecords,
-    listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout
+    listWorkouts, recordDailySummaries, recordDailySummary, recordWorkouts, recordWorkout,
+    updateGuardianStatus
   };
 }
 

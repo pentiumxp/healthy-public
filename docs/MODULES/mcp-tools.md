@@ -38,6 +38,7 @@ Apple Health 原生数据：
 
 - `mcp_health_apple_health_bulk_sync`
 - `mcp_health_apple_health_sync_state_get`
+- `mcp_health_apple_health_guardian_status_get`
 - `mcp_health_apple_health_incremental_sync`
 - `mcp_health_apple_daily_summaries_list`
 - `mcp_health_apple_daily_summary_record`
@@ -99,6 +100,21 @@ Apple Health：
 - `sync-state` 返回的 `recommended_since` 默认比服务端最新记录早 48 小时，
   用于吸收 Apple Health/Oura 睡眠、心率等迟到修正；重复记录仍由
   `source_type + external_id` 幂等键覆盖。
+- 健康守护模式的服务端监测使用
+  `mcp_health_apple_health_guardian_status_get` 或 HTTP
+  `GET /api/v1/apple-health/guardian-status`。返回每个 domain 的
+  `last_sample_at`、`last_upload_at`、`threshold_hours`、`status` 和整体
+  `fresh/stale/no_data/disabled`，只表示数据新鲜度和缺失情况，不表示连续实时
+  监控或医学诊断。
+- `POST /api/v1/apple-health/guardian-status` 可由 iOS 壳仅上报守护模式元数据，
+  例如 `guardian.enabled`、`guardian.clientReportedAt`、
+  `guardian.lastFailedUploadAt`、`guardian.lastFailureCode` 和 bounded
+  `guardian.lastFailureMessage`。bulk/incremental sync 也可携带同样的
+  `guardian`、`guardianMode` 或 `guardian_mode` 对象。workspace 仍由
+  launch/proxy/MCP wrapper 上下文解析，payload 不得传 key 或 workspace override。
+- 守护 freshness 阈值：daily summaries 36 小时、sleep records 36 小时、
+  vitals 6 小时、body measurements 168 小时；workout 和 ECG 属于
+  opportunistic domain，没有持续产生期望，只有存在时报告最新样本。
 - Apple Health workout 只表示 HealthKit 层面的运动项目。深蹲、卧推、推肩等
   专项力量动作仍使用 `mcp_health_strength_session_record` 和 canonical
   strength catalog。
